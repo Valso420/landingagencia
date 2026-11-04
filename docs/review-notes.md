@@ -4,7 +4,9 @@
 
 Preserve the approved mobile hierarchy while adapting each screen to the available width and visible viewport height (`100dvh`, with `100svh` fallback). The desktop layout retains the hierarchy, complete window frame, wing and readable HTML text. Private design references and project discussions are managed outside the public repository.
 
-Sections use native vertical scroll snapping with a stop at each screen. Destination cards retain their independent horizontal carousel. Long itineraries, enlarged text and very short viewports can expand a screen so content remains accessible. Do not clip text or intercept touch, wheel or keyboard scrolling to force a fixed height.
+Sections use native vertical scroll snapping as a fallback. With JavaScript, each vertical swipe or wheel/trackpad burst advances at most one frame through an 800 ms eased transition. Further movement from the same gesture is consumed, including momentum after the transition ends. New gestures during a transition are not queued. Horizontal carousels, pinch zoom, menu scrolling, keyboard navigation and direct links retain their native behavior. Reduced motion makes frame changes immediate.
+
+Long itineraries, enlarged text and very short viewports can expand a screen so content remains accessible. Gestures move through that content before advancing to the next frame; do not clip text to force a fixed height.
 
 The transparent navigation stays fixed over the screens and switches foreground color for light backgrounds. Its open menu has its own scrollable surface and keyboard focus handling. Without JavaScript, navigation remains visible in normal flow. The home title stays fixed during the first transition and is clipped as the next opaque screen covers it. Reduced motion removes that effect and smooth scrolling while preserving solar lighting.
 
