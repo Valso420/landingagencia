@@ -1,0 +1,87 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import cinqueTerre from '../assets/cinque-terre.png';
+import { destinations } from '../data/destinations';
+import { agency } from '../config/agency';
+import '../styles/contact.css';
+---
+<BaseLayout title={`Consultas de viaje · ${agency.name}`}>
+  <div class="contact-page">
+    <Image class="contact-editorial" src={cinqueTerre} alt="Cinque Terre sobre la costa de Italia" widths={[400, 800, 1200]} sizes="(min-width: 900px) 48vw, 100vw" format="webp" loading="eager" />
+    <section class="contact-content" aria-labelledby="contact-title">
+      <h1 id="contact-title">Consultas<br />de viaje</h1>
+      <p class="contact-lead">Contanos qué viaje tenés en mente. {agency.team.join(' y ')} te atenderán personalmente.</p>
+      <p class="contact-status" id="contact-status">Formulario de revisión. El envío está pendiente de configuración; tus datos quedan en esta página.</p>
+      <form id="inquiry-form" aria-describedby="contact-status" onsubmit="return false">
+        <label for="destination">Destino de interés</label>
+        <select id="destination" name="destino" required>
+          <option value="">Elegí un destino</option>
+          {destinations.map(destination => <option value={destination.slug} data-destination>{destination.name}</option>)}
+          <option value="otro">Otro destino / todavía no sé</option>
+        </select>
+        <div class="date-fields">
+          <div><label for="departure">Fecha de salida</label><input id="departure" name="salida" type="date" required /></div>
+          <div><label for="return">Fecha de regreso</label><input id="return" name="regreso" type="date" required /></div>
+        </div>
+        <label for="passengers">Cantidad de pasajeros</label>
+        <input id="passengers" name="pasajeros" type="number" min="1" max="99" step="1" value="2" inputmode="numeric" required />
+        <label for="message">Tu idea de viaje <span>(opcional)</span></label>
+        <textarea id="message" name="idea" rows="3" maxlength="2000" placeholder="Ciudades, intereses o algo que quieras contarnos…"></textarea>
+        <button class="button" type="submit" id="review-inquiry" disabled>Revisar consulta</button>
+        <noscript><p class="form-note">Podés recorrer los campos. Activá JavaScript para ver el resumen local; el envío todavía no está configurado.</p></noscript>
+      </form>
+      <div class="inquiry-review" id="inquiry-review" role="status" aria-live="polite" hidden>
+        <h2>Así sería tu consulta</h2>
+        <p id="inquiry-summary"></p>
+        <p>Revisión local completada. La consulta no se envió: falta confirmar el canal de atención de la agencia.</p>
+      </div>
+      <div class="contact-channels">
+        {agency.contact.whatsapp ? <a class="button" href={agency.contact.whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp ↗</a> : <p>WhatsApp · por confirmar</p>}
+        {agency.contact.instagram ? <a class="button" href={agency.contact.instagram} target="_blank" rel="noopener noreferrer">Instagram ↗</a> : <p>Instagram · por confirmar</p>}
+      </div>
+      <div class="contact-back-links">
+        <a class="button" id="back-destination" href="/#destinos">← Volver a destinos</a>
+        <a class="contact-home-link" href="/">Ir al inicio ↑</a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+<script>
+  const form = document.querySelector<HTMLFormElement>('#inquiry-form');
+  const destination = document.querySelector<HTMLSelectElement>('#destination');
+  const departure = document.querySelector<HTMLInputElement>('#departure');
+  const returnDate = document.querySelector<HTMLInputElement>('#return');
+  const passengers = document.querySelector<HTMLInputElement>('#passengers');
+  const idea = document.querySelector<HTMLTextAreaElement>('#message');
+  const backLink = document.querySelector<HTMLAnchorElement>('#back-destination');
+  const review = document.querySelector<HTMLElement>('#inquiry-review');
+  const summary = document.querySelector<HTMLElement>('#inquiry-summary');
+  const reviewButton = document.querySelector<HTMLButtonElement>('#review-inquiry');
+  if (form && destination && departure && returnDate && passengers && idea && backLink && review && summary && reviewButton) {
+    const queryDestination = new URLSearchParams(window.location.search).get('destino');
+    if (queryDestination && [...destination.options].some(option => option.value === queryDestination)) destination.value = queryDestination;
+    const updateDestination = () => {
+      const knownDestination = destination.selectedOptions[0].hasAttribute('data-destination');
+      backLink.href = knownDestination ? `/destinos/${encodeURIComponent(destination.value)}/` : '/#destinos';
+      backLink.textContent = knownDestination ? `← Volver a ${destination.selectedOptions[0].textContent}` : '← Volver a destinos';
+    };
+    const checkDates = () => {
+      returnDate.min = departure.value;
+      returnDate.setCustomValidity(returnDate.value && departure.value && returnDate.value < departure.value ? 'La fecha de regreso debe ser igual o posterior a la salida.' : '');
+    };
+    updateDestination();
+    reviewButton.disabled = false;
+    form.addEventListener('input', () => { checkDates(); review.hidden = true; });
+    destination.addEventListener('change', updateDestination);
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      checkDates();
+      if (!form.reportValidity()) return;
+      const formatDate = (value: string) => new Intl.DateTimeFormat('es-AR', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${value}T12:00:00Z`));
+      summary.textContent = `${destination.selectedOptions[0].textContent} · Del ${formatDate(departure.value)} al ${formatDate(returnDate.value)} · ${passengers.value} ${passengers.value === '1' ? 'pasajero' : 'pasajeros'}.${idea.value.trim() ? ` ${idea.value.trim()}` : ''}`;
+      review.hidden = false;
+      review.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    });
+  }
+</script>

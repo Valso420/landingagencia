@@ -1,0 +1,61 @@
+---
+import { agency } from '../config/agency';
+const links = [
+  { title: 'Inicio', href: '/#inicio' },
+  { title: 'La agencia', href: '/#agencia' },
+  { title: 'Destinos', href: '/#destinos' },
+  { title: 'Contacto', href: '/contacto/' },
+];
+---
+<header class="site-header">
+  <div class="header-inner">
+    <a class="agency-name" href="/">{agency.name}</a>
+    <button class="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="main-menu" hidden>
+      <img class="menu-open-icon" src="/menu.svg" width="24" height="24" alt="" />
+      <img class="menu-close-icon" src="/close.svg" width="24" height="24" alt="" />
+    </button>
+  </div>
+  <nav id="main-menu" class="main-menu" aria-label="Navegación principal">
+    <div class="menu-inner">
+      <ol>
+        {links.map((link, index) => <li><a href={link.href}><span aria-hidden="true">0{index + 1}</span>{link.title}</a></li>)}
+      </ol>
+      {agency.contact.instagram ? <a class="button menu-social" href={agency.contact.instagram} target="_blank" rel="noopener noreferrer">Instagram ↗</a> : <p class="menu-pending">Instagram · por confirmar</p>}
+    </div>
+  </nav>
+</header>
+<script>
+  const header = document.querySelector<HTMLElement>('.site-header');
+  const toggle = header?.querySelector<HTMLButtonElement>('.menu-toggle');
+  const nav = header?.querySelector<HTMLElement>('.main-menu');
+  if (header && toggle && nav) {
+    toggle.hidden = false;
+    nav.hidden = true;
+    header.classList.add('menu-enhanced');
+    const setOpen = (open: boolean, returnFocus = false) => {
+      nav.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+      header.classList.toggle('is-open', open);
+      document.body.classList.toggle('menu-is-open', open);
+      const main = document.querySelector('main');
+      if (main) main.inert = open;
+      if (open) nav.querySelector<HTMLAnchorElement>('a')?.focus();
+      else if (returnFocus) toggle.focus();
+    };
+    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+    nav.addEventListener('click', (event) => {
+      if ((event.target as Element).closest('a')) setOpen(false);
+    });
+    header.addEventListener('keydown', (event) => {
+      if (toggle.getAttribute('aria-expanded') !== 'true') return;
+      if (event.key === 'Escape') { event.preventDefault(); setOpen(false, true); }
+      if (event.key !== 'Tab') return;
+      const focusable = [toggle, ...nav.querySelectorAll<HTMLAnchorElement>('a[href]')];
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
+  }
+</script>

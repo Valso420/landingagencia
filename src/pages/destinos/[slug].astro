@@ -1,0 +1,61 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { destinations, type Destination } from '../../data/destinations';
+import '../../styles/destinations.css';
+
+export function getStaticPaths() {
+  return destinations.map((destination) => ({
+    params: { slug: destination.slug },
+    props: { destination },
+  }));
+}
+
+interface Props { destination: Destination }
+const { destination } = Astro.props;
+const returnUrl = `/?region=${destination.region}#destinos`;
+---
+
+<BaseLayout title={`${destination.name} · Recorrido ilustrativo`} description={destination.description} hideHeader={true}>
+  <section class="destination-cover" aria-labelledby="destination-name">
+    <Image src={destination.image} alt={destination.imageAlt} class="destination-cover-image" widths={[390, 780, 950]} sizes="100vw" loading="eager" fetchpriority="high" />
+    <a class="destination-back" href={returnUrl}><span aria-hidden="true">←</span> Volver a destinos</a>
+    <div class="destination-cover-title">
+      <h1 id="destination-name">{destination.name}</h1>
+      <p>{destination.route}</p>
+    </div>
+    <div class="destination-summary">
+      <h2>{destination.headline}</h2>
+      <p>{destination.description}</p>
+      <small>Recorrido ilustrativo</small>
+      <a class="destination-itinerary-link" href="#recorrido">Ver recorrido</a>
+    </div>
+  </section>
+
+  <section id="recorrido" class="destination-stops" aria-labelledby="stops-title">
+    <div class="destination-stops-inner">
+      <h2 id="stops-title">Paradas del viaje</h2>
+      <ol>
+        {destination.stops.map((stop, index) => (
+          <li>
+            <span class="stop-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+            <div>
+              <h3>{stop.city}</h3>
+              <p class="stop-area">{stop.area}</p>
+              <p class="stop-description">{stop.description}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="destination-consult" aria-labelledby="consult-title">
+    <div>
+      <h2 id="consult-title">Consultas sobre {destination.name}</h2>
+      <p>Escribinos para conversar sobre destinos y posibles recorridos.</p>
+      <a class="destination-consult-link" href={`/contacto/?destino=${destination.slug}`}>Consultar <span aria-hidden="true">↗</span></a>
+      <a class="destination-region-return" href={returnUrl}>Volver a {destination.region === 'asia' ? 'Asia' : 'Europa'} <span aria-hidden="true">↑</span></a>
+    </div>
+  </section>
+</BaseLayout>

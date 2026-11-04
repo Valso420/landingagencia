@@ -1,0 +1,36 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import WindowHero from '../components/WindowHero.astro';
+import DestinationExplorer from '../components/DestinationExplorer.astro';
+import cinqueTerre from '../assets/cinque-terre.png';
+import { agency } from '../config/agency';
+---
+<BaseLayout title={`${agency.name} · Tu próximo viaje está cerca`}>
+  <WindowHero />
+  <section class="about-section" id="agencia" aria-labelledby="about-title">
+    <div class="about-inner">
+      <div class="about-intro">
+        <h2 id="about-title">Quiénes<br />somos</h2>
+        <p class="about-description">{agency.description}</p>
+      </div>
+      <Image class="about-image" src={cinqueTerre} alt="Casas de colores frente al mar en Cinque Terre, Italia" widths={[400, 700, 1000]} sizes="(min-width: 800px) 550px, 90vw" format="webp" loading="lazy" />
+      <div class="about-copy">
+        <div><h3>Misión</h3><p>{agency.mission}</p></div>
+        <div><h3>Trayectoria</h3><p>{agency.history}</p></div>
+      </div>
+    </div>
+  </section>
+  <DestinationExplorer />
+  <footer class="home-contact" id="contacto">
+    <div class="contact-inner">
+      <h2>Consultas<br />de viaje</h2>
+      <p>{agency.team.join(' y ')} te acompañan a pensar tu próximo recorrido.</p>
+      <a class="button" href="/contacto/">Cómo consultar <span aria-hidden="true">↗</span></a>
+      <div class="footer-brand">
+        <p>{agency.name}</p>
+        <a class="button" href="#inicio">Volver al inicio <span aria-hidden="true">↑</span></a>
+      </div>
+    </div>
+  </footer>
+</BaseLayout>

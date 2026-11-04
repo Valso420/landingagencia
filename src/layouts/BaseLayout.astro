@@ -1,0 +1,29 @@
+---
+import '@fontsource-variable/dm-sans/standard.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import { agency } from '../config/agency';
+
+interface Props {
+  title?: string;
+  description?: string;
+  hideHeader?: boolean;
+}
+const { title = agency.name, description = agency.description, hideHeader = false } = Astro.props;
+---
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#181818" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    {!hideHeader && <Header />}
+    <main id="contenido" tabindex="-1"><slot /></main>
+  </body>
+</html>

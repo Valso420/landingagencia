@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1536">
+  <!-- Coordinates follow the glass opening in airplane-window.png. -->
+  <path fill="white" d="M362 432 Q506 438 649 432 C723 473 766 535 775 647 C780 730 780 848 775 934 C771 1010 744 1062 688 1096 C643 1124 584 1134 515 1134 C441 1134 378 1130 331 1108 C267 1078 237 1025 232 951 C226 857 225 745 231 665 C237 552 279 477 362 432Z"/>
+</svg>

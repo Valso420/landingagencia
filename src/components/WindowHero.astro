@@ -1,0 +1,33 @@
+---
+import { Image } from 'astro:assets';
+import windowImage from '../assets/airplane-window.png';
+---
+<section class="hero-section" id="inicio" aria-labelledby="hero-title">
+  <div class="window-hero" data-window-scene data-phase="dia">
+    <div class="window-scene" aria-hidden="true">
+      <Image class="window-photo" src={windowImage} alt="" widths={[512, 768, 1024]} sizes="(min-width: 480px) 596px, 124vw" format="webp" quality={88} loading="eager" fetchpriority="high" />
+      <div class="window-light window-light--night"></div>
+      <div class="window-light window-light--dawn"></div>
+      <div class="window-light window-light--warm"></div>
+    </div>
+    <div class="hero-contrast" aria-hidden="true"></div>
+    <h1 id="hero-title"><span class="hero-title-start">Tu próximo<br />viaje</span><span class="hero-title-end">está cerca</span></h1>
+    <a class="button hero-cta" href="#destinos">Ver destinos</a>
+    <a class="hero-scroll" href="#agencia">Deslizá para conocer la agencia</a>
+  </div>
+</section>
+{import.meta.env.DEV && <details class="phase-tools">
+  <summary>Revisar luz <span aria-hidden="true">◐</span></summary>
+  <label for="phase-picker">Luz de la ventanilla</label>
+  <select id="phase-picker" data-phase-picker>
+    <option value="auto">Automática · Buenos Aires</option>
+    <option value="amanecer">Amanecer</option>
+    <option value="dia">Día</option>
+    <option value="atardecer">Atardecer</option>
+    <option value="noche">Noche</option>
+  </select>
+  <p data-phase-label>Día · Buenos Aires</p>
+</details>}
+<script>
+  import '../scripts/window-light';
+</script>
