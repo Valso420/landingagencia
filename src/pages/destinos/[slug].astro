@@ -19,8 +19,8 @@ const region = regions.find(item => item.slug === destination.region)!;
 const contactUrl = `/contacto/?destino=${destination.slug}`;
 ---
 
-<BaseLayout title={`${destination.name} · Recorrido ilustrativo`} description={destination.description} hideHeader={true}>
-  <section class:list={['destination-cover', `destination-cover--${destination.slug}`]} aria-labelledby="destination-name">
+<BaseLayout title={`${destination.name} · Recorrido ilustrativo`} description={destination.description} overlayHeader>
+  <section class:list={['screen-frame', 'destination-cover', `destination-cover--${destination.slug}`]} aria-labelledby="destination-name" data-header-theme="light">
     <Image src={destination.image} alt={destination.imageAlt} class="destination-cover-image" quality={90} loading="eager" fetchpriority="high" />
     <a class="destination-back" href={returnUrl} aria-label={`Volver a destinos de ${region.name}`}><img src={backIcon.src} width="24" height="24" alt="" /></a>
     <div class="destination-cover-title">
@@ -35,30 +35,32 @@ const contactUrl = `/contacto/?destino=${destination.slug}`;
     </div>
   </section>
 
-  <section id="recorrido" class="destination-stops" aria-labelledby="stops-title">
-    <div class="destination-stops-inner">
-      <h2 id="stops-title">Paradas del viaje</h2>
-      <ol>
-        {destination.stops.map((stop, index) => (
-          <li>
-            <span class="stop-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-            <div>
-              <h3>{stop.city}</h3>
-              <p class="stop-area">{stop.area}</p>
-              <p class="stop-description">{stop.description}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </div>
-  </section>
+  <div id="recorrido" class="screen-frame destination-details" data-header-theme="dark">
+    <section class="destination-stops" aria-labelledby="stops-title">
+      <div class="destination-stops-inner">
+        <h2 id="stops-title">Paradas del viaje</h2>
+        <ol>
+          {destination.stops.map((stop, index) => (
+            <li>
+              <span class="stop-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <h3>{stop.city}</h3>
+                <p class="stop-area">{stop.area}</p>
+                <p class="stop-description">{stop.description}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
 
-  <section class="destination-consult" aria-labelledby="consult-title">
-    <div>
-      <h2 id="consult-title">Consultas sobre {destination.name}</h2>
-      <p>Escribinos para conversar sobre destinos y posibles recorridos.</p>
-      <a class="destination-consult-link" href={contactUrl}>Consultar</a>
-      <a class="destination-region-return" href={returnUrl}>Volver a {region.name} <span aria-hidden="true">↑</span></a>
-    </div>
-  </section>
+    <section class="destination-consult" aria-labelledby="consult-title">
+      <div>
+        <h2 id="consult-title">Consultas sobre {destination.name}</h2>
+        <p>Escribinos para conversar sobre destinos y posibles recorridos.</p>
+        <a class="destination-consult-link" href={contactUrl}>Consultar</a>
+        <a class="destination-region-return" href={returnUrl}>Volver a {region.name} <span aria-hidden="true">↑</span></a>
+      </div>
+    </section>
+  </div>
 </BaseLayout>

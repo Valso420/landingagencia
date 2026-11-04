@@ -8,7 +8,7 @@ import '../styles/contact.css';
 const catalogue = destinations.map(({ slug, name }) => ({ slug, name }));
 ---
 <BaseLayout title={`Consultas de viaje · ${agency.name}`} overlayHeader>
-  <div class="contact-page">
+  <div class="contact-page screen-frame" data-header-theme="light">
     <Image class="contact-editorial" src={cinqueTerre} alt="Cinque Terre sobre la costa de Italia" widths={[400, 800, 1200]} sizes="(min-width: 900px) 48vw, 100vw" format="webp" loading="eager" />
     <section class="contact-content" aria-labelledby="contact-title" data-destinations={JSON.stringify(catalogue)}>
       <h1 id="contact-title">Consultas<br />de viaje</h1>

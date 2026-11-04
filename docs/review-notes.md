@@ -2,7 +2,11 @@
 
 ## Layout
 
-Preserve the approved 390 px mobile composition. The desktop layout should retain the hierarchy, complete window frame, wing and readable HTML text. Private design references and project discussions are managed outside the public repository.
+Preserve the approved mobile hierarchy while adapting each screen to the available width and visible viewport height (`100dvh`, with `100svh` fallback). The desktop layout retains the hierarchy, complete window frame, wing and readable HTML text. Private design references and project discussions are managed outside the public repository.
+
+Sections use native vertical scroll snapping with a stop at each screen. Destination cards retain their independent horizontal carousel. Long itineraries, enlarged text and very short viewports can expand a screen so content remains accessible. Do not clip text or intercept touch, wheel or keyboard scrolling to force a fixed height.
+
+The transparent navigation stays fixed over the screens and switches foreground color for light backgrounds. Its open menu has its own scrollable surface and keyboard focus handling. Without JavaScript, navigation remains visible in normal flow. The home title stays fixed during the first transition and is clipped as the next opaque screen covers it. Reduced motion removes that effect and smooth scrolling while preserving solar lighting.
 
 ## Window and requested exports
 
@@ -42,6 +46,7 @@ No CMS, user accounts, reservations, payments or Vercel administration is part o
 
 - Run `npm run check`, `npm test`, `npm run build` and then `npm run test:security`.
 - At 390 px, follow home to continent to destination to inquiry; confirm the destination is retained and the regional return link works.
+- Repeat at 1440 px, narrow/short phone sizes and landscape; check viewport resizing, screen stops, header contrast and the first title-cover transition. Check that long screens remain readable through their last link.
 - Review all three regions and eight destination pages, menu open/close, contact context and the pending channel message.
 - Check for browser errors or Content Security Policy violations. Confirm unrecognized destination queries are ignored, text is displayed literally and no contact data is submitted.
 - Repeat navigation with the keyboard, including visible focus, menu focus behavior and Escape.

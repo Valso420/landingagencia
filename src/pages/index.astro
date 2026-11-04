@@ -9,7 +9,7 @@ import { agency } from '../config/agency';
 ---
 <BaseLayout title={`${agency.name} · Tu próximo viaje`} overlayHeader>
   <WindowHero />
-  <section class="home-about" id="agencia" aria-labelledby="about-title">
+  <section class="home-about screen-frame" id="agencia" aria-labelledby="about-title" data-header-theme="dark">
     <div class="home-about-inner">
       <Image class="home-about-image" src={planning} alt="Un mapa, una cámara y un cuaderno para planificar un viaje" widths={[400, 700, 1000]} sizes="(min-width: 800px) 500px, calc(100vw - 48px)" format="webp" loading="lazy" />
       <div class="home-about-copy">
@@ -21,7 +21,7 @@ import { agency } from '../config/agency';
     </div>
   </section>
   <DestinationExplorer />
-  <footer class="home-footer" id="contacto">
+  <footer class="home-footer screen-frame" id="contacto" data-header-theme="light">
     <div class="home-footer-inner">
       <h2>Consultas<br />de viaje</h2>
       <p>Consultá por destinos y recorridos en Instagram.</p>
@@ -34,30 +34,35 @@ import { agency } from '../config/agency';
   </footer>
 </BaseLayout>
 <style>
-  .home-about { background: var(--paper); padding: 44px 24px; }
-  .home-about-inner { display: flex; flex-direction: column; gap: 24px; max-width: 1100px; margin: auto; }
-  .home-about-image { width: 100%; aspect-ratio: 342/228; object-fit: cover; filter: grayscale(1); }
-  .home-about-copy { display: flex; flex-direction: column; gap: 16px; }
-  .home-about-copy h2 { font-family: 'Montserrat',sans-serif; font-size: 35px; font-weight: 500; line-height: 1.43; letter-spacing: -1.05px; }
-  .home-about-lead { font-size: 18px; line-height: 1.43; }
+  .home-about { z-index: 2; display: flex; align-items: center; background: var(--paper); padding: calc(var(--header-height) + clamp(12px, 2vh, 24px)) 24px max(20px, env(safe-area-inset-bottom)); }
+  .home-about-inner { display: flex; flex-direction: column; gap: clamp(12px, 2.8vh, 24px); max-width: 1100px; width: 100%; margin: auto; }
+  .home-about-image { width: 100%; height: clamp(84px, calc(var(--screen-height) * .25), 228px); object-fit: cover; filter: grayscale(1); }
+  .home-about-copy { display: flex; flex-direction: column; gap: clamp(10px, 1.8vh, 16px); }
+  .home-about-copy h2 { font-family: 'Montserrat',sans-serif; font-size: clamp(30px, 9vw, 35px); font-weight: 500; line-height: 1.2; letter-spacing: -1.05px; }
+  .home-about-lead { font-size: clamp(16px, 4.6vw, 18px); line-height: 1.43; }
   .home-about-detail { color: var(--muted); font-size: 15px; line-height: 1.43; }
   .home-about-copy .button { width: 100%; }
-  .home-footer { padding: 42px 24px 35px; background: var(--night); color: white; }
-  .home-footer-inner { display: flex; flex-direction: column; gap: 16px; max-width: 1100px; margin: auto; }
-  .home-footer h2 { font-family: 'Montserrat',sans-serif; font-size: 47px; font-weight: 700; line-height: 1; letter-spacing: -1.88px; }
+  .home-footer { z-index: 2; display: flex; align-items: center; padding: calc(var(--header-height) + 20px) 24px max(24px, env(safe-area-inset-bottom)); background: var(--night); color: white; }
+  .home-footer-inner { display: flex; flex-direction: column; gap: clamp(12px, 2vh, 16px); max-width: 1100px; width: 100%; margin: auto; }
+  .home-footer h2 { font-family: 'Montserrat',sans-serif; font-size: clamp(40px, 12vw, 47px); font-weight: 700; line-height: 1; letter-spacing: -1.88px; }
   .home-footer p { font-size: 16px; line-height: 1.35; }
   .home-footer .button { width: 100%; }
   .home-footer-brand { border-top: 1px solid var(--muted); padding-top: 16px; display: flex; flex-direction: column; gap: 16px; }
   .home-footer-brand p { font-weight: 500; }
   .back-to-top { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: white; }
   @media(min-width:800px) {
-    .home-about { padding: 80px 48px; }
+    .home-about { padding: calc(var(--header-height) + 24px) 48px 32px; }
     .home-about-inner { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 64px; }
-    .home-about-image { aspect-ratio: 1.2; }
+    .home-about-image { height: clamp(180px, calc(var(--screen-height) * .5), 460px); }
     .home-about-copy h2 { font-size: 44px; }
-    .home-footer { padding: 64px 48px; }
+    .home-footer { padding: calc(var(--header-height) + 24px) 48px 32px; }
     .home-footer h2 { font-size: 64px; }
     .home-footer .button { max-width: 342px; }
     .home-footer-brand { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 16px; }
+  }
+  @media(max-height:700px) and (max-width:799px) {
+    .home-about-image { height: clamp(84px, calc(var(--screen-height) * .18), 140px); }
+    .home-about-inner { gap: 12px; }
+    .home-about-copy { gap: 10px; }
   }
 </style>

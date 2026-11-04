@@ -35,6 +35,25 @@ const links = [
     toggle.hidden = false;
     nav.hidden = true;
     header.classList.add('menu-enhanced');
+    const themedFrames = [...document.querySelectorAll<HTMLElement>('[data-header-theme]')];
+    let themeUpdate = 0;
+    const updateTheme = () => {
+      themeUpdate = 0;
+      const sampleY = header.getBoundingClientRect().height / 2;
+      const frame = themedFrames.find(element => {
+        const bounds = element.getBoundingClientRect();
+        return bounds.top <= sampleY && bounds.bottom > sampleY;
+      });
+      header.dataset.theme = frame?.dataset.headerTheme ?? 'light';
+    };
+    const scheduleTheme = () => {
+      if (!themeUpdate) themeUpdate = requestAnimationFrame(updateTheme);
+    };
+    window.addEventListener('scroll', scheduleTheme, { passive: true });
+    window.addEventListener('resize', scheduleTheme);
+    window.addEventListener('pageshow', scheduleTheme);
+    document.fonts.ready.then(scheduleTheme);
+    updateTheme();
     const setOpen = (open: boolean, returnFocus = false) => {
       nav.hidden = !open;
       toggle.setAttribute('aria-expanded', String(open));

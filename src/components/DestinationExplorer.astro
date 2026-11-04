@@ -14,7 +14,7 @@ const { standalone = false } = Astro.props;
     const Heading = standalone && index === 0 ? 'h1' : 'h2';
     const items = region.destinationSlugs.map(slug => destinations.find(destination => destination.slug === slug)!);
     return (
-      <article id={`region-${region.slug}`} class={`region-panel region-panel--${region.slug}`} data-region={region.slug} aria-labelledby={`region-title-${region.slug}`}>
+      <article id={`region-${region.slug}`} class={`screen-frame region-panel region-panel--${region.slug}`} data-region={region.slug} aria-labelledby={`region-title-${region.slug}`}>
         <Image src={region.image} alt="" class="region-background" quality={90} loading={standalone && index === 0 ? 'eager' : 'lazy'} />
         <div class="region-content">
           <Heading id={`region-title-${region.slug}`} class="region-title" tabindex="-1">{region.name}</Heading>
