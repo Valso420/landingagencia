@@ -1,13 +1,15 @@
 ---
 import { agency } from '../config/agency';
+interface Props { overlay?: boolean }
+const { overlay = false } = Astro.props;
 const links = [
   { title: 'Inicio', href: '/#inicio' },
-  { title: 'La agencia', href: '/#agencia' },
-  { title: 'Destinos', href: '/#destinos' },
+  { title: 'La agencia', href: '/agencia/' },
+  { title: 'Destinos', href: '/destinos/' },
   { title: 'Contacto', href: '/contacto/' },
 ];
 ---
-<header class="site-header">
+<header class:list={['site-header', { 'site-header--overlay': overlay }]}>
   <div class="header-inner">
     <a class="agency-name" href="/">{agency.name}</a>
     <button class="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="main-menu" hidden>
@@ -17,10 +19,11 @@ const links = [
   </div>
   <nav id="main-menu" class="main-menu" aria-label="Navegación principal">
     <div class="menu-inner">
+      <p class="menu-brand">{agency.name}</p>
       <ol>
-        {links.map((link, index) => <li><a href={link.href}><span aria-hidden="true">0{index + 1}</span>{link.title}</a></li>)}
+        {links.map(link => <li><a href={link.href}>{link.title}</a></li>)}
       </ol>
-      {agency.contact.instagram ? <a class="button menu-social" href={agency.contact.instagram} target="_blank" rel="noopener noreferrer">Instagram ↗</a> : <p class="menu-pending">Instagram · por confirmar</p>}
+      <a class="button menu-social" href={agency.contact.instagram ?? '/contacto/'} target={agency.contact.instagram ? '_blank' : undefined} rel={agency.contact.instagram ? 'noopener noreferrer' : undefined}>Instagram</a>
     </div>
   </nav>
 </header>

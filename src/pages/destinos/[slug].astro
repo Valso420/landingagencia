@@ -1,7 +1,8 @@
 ---
 import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { destinations, type Destination } from '../../data/destinations';
+import backIcon from '../../assets/destination-back.svg';
+import { destinations, regions, type Destination } from '../../data/destinations';
 import '../../styles/destinations.css';
 
 export function getStaticPaths() {
@@ -14,12 +15,14 @@ export function getStaticPaths() {
 interface Props { destination: Destination }
 const { destination } = Astro.props;
 const returnUrl = `/?region=${destination.region}#destinos`;
+const region = regions.find(item => item.slug === destination.region)!;
+const contactUrl = `/contacto/?destino=${destination.slug}`;
 ---
 
 <BaseLayout title={`${destination.name} · Recorrido ilustrativo`} description={destination.description} hideHeader={true}>
-  <section class="destination-cover" aria-labelledby="destination-name">
-    <Image src={destination.image} alt={destination.imageAlt} class="destination-cover-image" widths={[390, 780, 950]} sizes="100vw" loading="eager" fetchpriority="high" />
-    <a class="destination-back" href={returnUrl}><span aria-hidden="true">←</span> Volver a destinos</a>
+  <section class:list={['destination-cover', `destination-cover--${destination.slug}`]} aria-labelledby="destination-name">
+    <Image src={destination.image} alt={destination.imageAlt} class="destination-cover-image" quality={90} loading="eager" fetchpriority="high" />
+    <a class="destination-back" href={returnUrl} aria-label={`Volver a destinos de ${region.name}`}><img src={backIcon.src} width="24" height="24" alt="" /></a>
     <div class="destination-cover-title">
       <h1 id="destination-name">{destination.name}</h1>
       <p>{destination.route}</p>
@@ -28,7 +31,7 @@ const returnUrl = `/?region=${destination.region}#destinos`;
       <h2>{destination.headline}</h2>
       <p>{destination.description}</p>
       <small>Recorrido ilustrativo</small>
-      <a class="destination-itinerary-link" href="#recorrido">Ver recorrido</a>
+      <a class="destination-itinerary-link" href={contactUrl}>Consultar</a>
     </div>
   </section>
 
@@ -54,8 +57,8 @@ const returnUrl = `/?region=${destination.region}#destinos`;
     <div>
       <h2 id="consult-title">Consultas sobre {destination.name}</h2>
       <p>Escribinos para conversar sobre destinos y posibles recorridos.</p>
-      <a class="destination-consult-link" href={`/contacto/?destino=${destination.slug}`}>Consultar <span aria-hidden="true">↗</span></a>
-      <a class="destination-region-return" href={returnUrl}>Volver a {destination.region === 'asia' ? 'Asia' : 'Europa'} <span aria-hidden="true">↑</span></a>
+      <a class="destination-consult-link" href={contactUrl}>Consultar</a>
+      <a class="destination-region-return" href={returnUrl}>Volver a {region.name} <span aria-hidden="true">↑</span></a>
     </div>
   </section>
 </BaseLayout>

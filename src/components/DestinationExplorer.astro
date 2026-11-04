@@ -1,38 +1,38 @@
 ---
 import { Image } from 'astro:assets';
+import plusIcon from '../assets/destination-plus.svg';
 import { destinations, regions } from '../data/destinations';
 import '../styles/destinations.css';
+
+interface Props { standalone?: boolean }
+const { standalone = false } = Astro.props;
 ---
 
-<section id="destinos" class="destination-explorer" aria-label="Explorá nuestros destinos" data-destination-explorer>
+<section id="destinos" class:list={['destination-explorer', { 'destination-explorer--standalone': standalone }]} aria-label="Explorá nuestros destinos" data-destination-explorer>
+  <p class="sr-only" id="destination-carousel-help">Deslizá las tarjetas para ver más destinos. Con teclado, usá Tab para recorrer las propuestas o las flechas cuando la lista tenga el foco.</p>
   {regions.map((region, index) => {
-    const nextRegion = regions[(index + 1) % regions.length]!;
-    const items = destinations.filter((destination) => region.destinationSlugs.includes(destination.slug));
+    const Heading = standalone && index === 0 ? 'h1' : 'h2';
+    const items = region.destinationSlugs.map(slug => destinations.find(destination => destination.slug === slug)!);
     return (
       <article id={`region-${region.slug}`} class={`region-panel region-panel--${region.slug}`} data-region={region.slug} aria-labelledby={`region-title-${region.slug}`}>
-        <Image src={region.image} alt="" class="region-background" widths={[390, 780, 950]} sizes="100vw" loading="lazy" />
+        <Image src={region.image} alt="" class="region-background" quality={90} loading={standalone && index === 0 ? 'eager' : 'lazy'} />
         <div class="region-content">
-          <h2 id={`region-title-${region.slug}`} class="region-title" tabindex="-1">{region.name}</h2>
-          <p class="region-description">{region.description}</p>
-          <a href={`/destinos/${items[0]!.slug}/`} class="region-explore" aria-label={`Explorar un recorrido por ${region.name}`}>Explorar</a>
-          <div class="destination-cards" aria-label={`Recorridos ilustrativos de ${region.name}`}>
-            {items.map((destination) => (
-              <a class="destination-card" href={`/destinos/${destination.slug}/`} aria-label={`Ver ficha de ${destination.name}: ${destination.route}`}>
-                <h3>{destination.cardTitle}</h3>
-                <p>{destination.route}</p>
-                <div class="destination-card-image">
-                  <Image src={destination.image} alt={destination.imageAlt} widths={[300, 600]} sizes="(min-width: 760px) 360px, 300px" loading="lazy" />
-                  <span class="destination-card-action">Ver ficha</span>
-                </div>
-              </a>
+          <Heading id={`region-title-${region.slug}`} class="region-title" tabindex="-1">{region.name}</Heading>
+          <ul class="destination-cards" aria-label={`Recorridos ilustrativos de ${region.name}`} aria-describedby="destination-carousel-help" tabindex="0">
+            {items.map(destination => (
+              <li class="destination-card-item">
+                <a class="destination-card" href={`/destinos/${destination.slug}/`} aria-label={`Ver ficha de ${destination.name}: ${destination.route}`}>
+                  <Image src={destination.image} alt={destination.imageAlt} widths={[552, 828]} sizes="(min-width: 760px) 640px, 552px" quality={90} loading="lazy" />
+                  <div class="destination-card-copy">
+                    <h3>{destination.cardTitle}</h3>
+                    <p>{destination.cardRoute}</p>
+                  </div>
+                  <span class="destination-card-action" aria-hidden="true"><img src={plusIcon.src} width="24" height="24" alt="" /></span>
+                </a>
+              </li>
             ))}
-          </div>
-          <div class="region-footer">
-            <span>{String(index + 1).padStart(2, '0')} / 02</span>
-            <a class="region-switch" href={`#region-${nextRegion.slug}`} data-region-switch={nextRegion.slug}>
-              {nextRegion.name}<span aria-hidden="true">{index === 0 ? '→' : '←'}</span>
-            </a>
-          </div>
+          </ul>
+          <p class="region-description">{region.description}</p>
         </div>
       </article>
     );
@@ -43,38 +43,26 @@ import '../styles/destinations.css';
   const explorer = document.querySelector<HTMLElement>('[data-destination-explorer]');
 
   if (explorer) {
-    const panels = Array.from(explorer.querySelectorAll<HTMLElement>('[data-region]'));
-    const showRegion = (slug: string, focus = false) => {
-      const selected = panels.find((panel) => panel.dataset.region === slug) ?? panels[0];
-      if (!selected) return;
-      panels.forEach((panel) => { panel.hidden = panel !== selected; });
-      if (focus) {
-        selected.querySelector<HTMLElement>('.region-title')?.focus({ preventScroll: true });
-        explorer.scrollIntoView({ block: 'start' });
-      }
-    };
-
-    const regionFromLocation = () => {
-      const hashRegion = location.hash.startsWith('#region-') ? location.hash.slice(8) : '';
-      return hashRegion || new URLSearchParams(location.search).get('region') || 'asia';
-    };
-
-    showRegion(regionFromLocation());
-
-    explorer.querySelectorAll<HTMLAnchorElement>('[data-region-switch]').forEach((link) => {
-      link.addEventListener('click', (event) => {
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        const slug = link.dataset.regionSwitch!;
+    const restoreRegion = () => {
+      const regionHash = location.hash.startsWith('#region-');
+      if (location.hash && location.hash !== '#destinos' && !regionHash) return;
+      const slug = regionHash ? location.hash.slice(8) : new URLSearchParams(location.search).get('region');
+      if (!slug) return;
+      const panel = [...explorer.querySelectorAll<HTMLElement>('[data-region]')].find(item => item.dataset.region === slug);
+      if (!panel) return;
+      // Normalize legacy links so the browser's fragment scroll targets the same region.
+      if (location.hash !== `#${panel.id}`) {
         const url = new URL(location.href);
-        url.searchParams.set('region', slug);
-        url.hash = 'destinos';
-        history.pushState(null, '', url);
-        showRegion(slug, true);
-      });
-    });
+        url.hash = panel.id;
+        history.replaceState(null, '', url);
+      }
+      panel.scrollIntoView({ block: 'start', behavior: 'instant' });
+    };
 
-    window.addEventListener('popstate', () => showRegion(regionFromLocation()));
-    window.addEventListener('hashchange', () => showRegion(regionFromLocation()));
+    restoreRegion();
+    window.addEventListener('load', restoreRegion, { once: true });
+    document.fonts.ready.then(restoreRegion);
+    window.addEventListener('popstate', restoreRegion);
+    window.addEventListener('hashchange', restoreRegion);
   }
 </script>

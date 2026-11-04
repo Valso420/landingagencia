@@ -3,34 +3,61 @@ import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import WindowHero from '../components/WindowHero.astro';
 import DestinationExplorer from '../components/DestinationExplorer.astro';
-import cinqueTerre from '../assets/cinque-terre.png';
+import planning from '../assets/travel-planning.jpg';
+import arrowUp from '../assets/arrow-up.svg';
 import { agency } from '../config/agency';
 ---
-<BaseLayout title={`${agency.name} · Tu próximo viaje está cerca`}>
+<BaseLayout title={`${agency.name} · Tu próximo viaje`} overlayHeader>
   <WindowHero />
-  <section class="about-section" id="agencia" aria-labelledby="about-title">
-    <div class="about-inner">
-      <div class="about-intro">
-        <h2 id="about-title">Quiénes<br />somos</h2>
-        <p class="about-description">{agency.description}</p>
-      </div>
-      <Image class="about-image" src={cinqueTerre} alt="Casas de colores frente al mar en Cinque Terre, Italia" widths={[400, 700, 1000]} sizes="(min-width: 800px) 550px, 90vw" format="webp" loading="lazy" />
-      <div class="about-copy">
-        <div><h3>Misión</h3><p>{agency.mission}</p></div>
-        <div><h3>Trayectoria</h3><p>{agency.history}</p></div>
+  <section class="home-about" id="agencia" aria-labelledby="about-title">
+    <div class="home-about-inner">
+      <Image class="home-about-image" src={planning} alt="Un mapa, una cámara y un cuaderno para planificar un viaje" widths={[400, 700, 1000]} sizes="(min-width: 800px) 500px, calc(100vw - 48px)" format="webp" loading="lazy" />
+      <div class="home-about-copy">
+        <h2 id="about-title">Quiénes somos</h2>
+        <p class="home-about-lead">Somos una agencia virtual enfocada en viajes al exterior y recorridos multidestino.</p>
+        <p class="home-about-detail">Partimos de una idea de viaje para conectar los lugares que querés conocer en un mismo recorrido.</p>
+        <a class="button button--dark" href="/agencia/">Conocer la agencia</a>
       </div>
     </div>
   </section>
   <DestinationExplorer />
-  <footer class="home-contact" id="contacto">
-    <div class="contact-inner">
+  <footer class="home-footer" id="contacto">
+    <div class="home-footer-inner">
       <h2>Consultas<br />de viaje</h2>
-      <p>{agency.team.join(' y ')} te acompañan a pensar tu próximo recorrido.</p>
-      <a class="button" href="/contacto/">Cómo consultar <span aria-hidden="true">↗</span></a>
-      <div class="footer-brand">
+      <p>Consultá por destinos y recorridos en Instagram.</p>
+      <a class="button" href="/contacto/">Cómo consultar</a>
+      <div class="home-footer-brand">
         <p>{agency.name}</p>
-        <a class="button" href="#inicio">Volver al inicio <span aria-hidden="true">↑</span></a>
+        <a class="back-to-top" href="#inicio" aria-label="Volver al inicio"><img src={arrowUp.src} width="24" height="24" alt="" /></a>
       </div>
     </div>
   </footer>
 </BaseLayout>
+<style>
+  .home-about { background: var(--paper); padding: 44px 24px; }
+  .home-about-inner { display: flex; flex-direction: column; gap: 24px; max-width: 1100px; margin: auto; }
+  .home-about-image { width: 100%; aspect-ratio: 342/228; object-fit: cover; filter: grayscale(1); }
+  .home-about-copy { display: flex; flex-direction: column; gap: 16px; }
+  .home-about-copy h2 { font-family: 'Montserrat',sans-serif; font-size: 35px; font-weight: 500; line-height: 1.43; letter-spacing: -1.05px; }
+  .home-about-lead { font-size: 18px; line-height: 1.43; }
+  .home-about-detail { color: var(--muted); font-size: 15px; line-height: 1.43; }
+  .home-about-copy .button { width: 100%; }
+  .home-footer { padding: 42px 24px 35px; background: var(--night); color: white; }
+  .home-footer-inner { display: flex; flex-direction: column; gap: 16px; max-width: 1100px; margin: auto; }
+  .home-footer h2 { font-family: 'Montserrat',sans-serif; font-size: 47px; font-weight: 700; line-height: 1; letter-spacing: -1.88px; }
+  .home-footer p { font-size: 16px; line-height: 1.35; }
+  .home-footer .button { width: 100%; }
+  .home-footer-brand { border-top: 1px solid var(--muted); padding-top: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .home-footer-brand p { font-weight: 500; }
+  .back-to-top { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: white; }
+  @media(min-width:800px) {
+    .home-about { padding: 80px 48px; }
+    .home-about-inner { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 64px; }
+    .home-about-image { aspect-ratio: 1.2; }
+    .home-about-copy h2 { font-size: 44px; }
+    .home-footer { padding: 64px 48px; }
+    .home-footer h2 { font-size: 64px; }
+    .home-footer .button { max-width: 342px; }
+    .home-footer-brand { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 16px; }
+  }
+</style>
