@@ -8,7 +8,7 @@ Sections use native vertical scroll snapping as a fallback. With JavaScript, eac
 
 Long itineraries, enlarged text and very short viewports can expand a screen so content remains accessible. Gestures move through that content before advancing to the next frame; do not clip text to force a fixed height.
 
-The transparent navigation stays fixed over the screens and switches foreground color for light backgrounds. Its open menu has its own scrollable surface and keyboard focus handling. Without JavaScript, navigation remains visible in normal flow. The home title stays fixed during the first transition and is clipped as the next opaque screen covers it. Reduced motion removes that effect and smooth scrolling while preserving solar lighting.
+The transparent navigation stays fixed over the screens and switches foreground color for light backgrounds. Its open menu has its own scrollable surface and keyboard focus handling. Without JavaScript, navigation remains visible in normal flow. During the first transition, the window background and its lighting stay fixed while the title and destination button move upward with the screen. The hero clips its background as the next opaque screen covers it. Reduced motion and the no-JavaScript fallback keep the background attached to the hero; solar lighting is preserved.
 
 ## Window and requested exports
 
@@ -48,7 +48,7 @@ No CMS, user accounts, reservations, payments or Vercel administration is part o
 
 - Run `npm run check`, `npm test`, `npm run build` and then `npm run test:security`.
 - At 390 px, follow home to continent to destination to inquiry; confirm the destination is retained and the regional return link works.
-- Repeat at 1440 px, narrow/short phone sizes and landscape; check viewport resizing, screen stops, header contrast and the first title-cover transition. Check that long screens remain readable through their last link.
+- Repeat at 1440 px, narrow/short phone sizes and landscape; check viewport resizing, screen stops, header contrast and the first transition with its fixed background and moving content. Check that long screens remain readable through their last link.
 - Review all three regions and eight destination pages, menu open/close, contact context and the pending channel message.
 - Check for browser errors or Content Security Policy violations. Confirm unrecognized destination queries are ignored, text is displayed literally and no contact data is submitted.
 - Repeat navigation with the keyboard, including visible focus, menu focus behavior and Escape.

@@ -146,7 +146,8 @@ main:focus { outline: none; }
 .site-header:not(.menu-enhanced) .main-menu li+li { margin: 0; }
 .site-header:not(.menu-enhanced) .main-menu li a { min-height: 44px; font-size: 16px; }
 .site-header:not(.menu-enhanced) .menu-social { margin-top: 16px; max-width: 342px; }
-.site-header:not(.menu-enhanced) + main .window-hero h1 { position: absolute; }
+.site-header:not(.menu-enhanced) ~ main .window-scene,
+.site-header:not(.menu-enhanced) ~ main .hero-contrast { position: absolute; }
 
 .hero-section { background: var(--night); z-index: 0; clip-path: inset(0); }
 .window-hero {
@@ -162,11 +163,11 @@ main:focus { outline: none; }
   --scene-dawn: 0;
 }
 .window-scene {
-  position: absolute;
+  position: fixed;
   width: min(124.1%, calc(var(--screen-height) * .64), 660px);
   aspect-ratio: 2/3;
   left: 50%;
-  top: 46%;
+  top: calc(var(--screen-height) * .46);
   transform: translate(-50%, -50%);
   opacity: .5;
 }
@@ -181,9 +182,9 @@ main:focus { outline: none; }
 .window-light--night { background: #02132d; opacity: calc(var(--scene-night)*.92); }
 .window-light--warm { background: linear-gradient(#dd7d35,#ffb14f 60%,#c46b3c); mix-blend-mode: color; opacity: calc(var(--scene-warm)*.78); }
 .window-light--dawn { background: linear-gradient(#e8a78b,#ffd6a0); mix-blend-mode: soft-light; opacity: calc(var(--scene-dawn)*.9); }
-.hero-contrast { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(0,0,0,.74),transparent 27%,transparent 68%,rgba(0,0,0,.74)); pointer-events: none; }
+.hero-contrast { position: fixed; inset: 0 0 auto; height: var(--screen-height); background: linear-gradient(180deg,rgba(0,0,0,.74),transparent 27%,transparent 68%,rgba(0,0,0,.74)); pointer-events: none; }
 .window-hero h1 {
-  position: fixed;
+  position: absolute;
   z-index: 1;
   top: calc(var(--screen-height) * .4);
   left: 50%;
@@ -205,7 +206,7 @@ main:focus { outline: none; }
 .phase-tools select { margin: 0 14px 10px; padding: 10px 8px; background: var(--paper); color: var(--ink); max-width: calc(100% - 28px); border-radius: 5px; }
 @media(prefers-reduced-motion:reduce) {
   html { scroll-behavior: auto; }
-  .window-hero h1 { position: absolute; }
+  .window-scene,.hero-contrast { position: absolute; }
   *,*::before,*::after { animation: none!important; transition: none!important; }
 }
 @media(max-height:650px) {
