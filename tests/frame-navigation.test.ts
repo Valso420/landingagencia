@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { isViewportZoomed, nextFrameStop, WheelGesture, type FrameBounds } from '../src/lib/frame-navigation';
+import { canControlFrameGesture, isViewportZoomed, nextFrameStop, WheelGesture, type FrameBounds } from '../src/lib/frame-navigation';
 
 test('viewport scale rounding does not disable frame navigation at default zoom', () => {
   for (const scale of [1, 1.0000001192092896, 1.0000009536743164, 1.001]) {
@@ -83,6 +83,102 @@ test('switching to horizontal scrolling releases the event without allowing anot
   assert.equal(gesture.update(40, 0, false, true).direction, 1);
   assert.deepEqual(gesture.update(5, 100, true, false), { managed: false, direction: 0 });
   assert.deepEqual(gesture.update(40, 200, true, true), { managed: true, direction: 0 });
+});
+
+test('native home sections keep entry and exit native while neighboring destinations are controlled', () => {
+  const viewport = 800;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true },
+    { top: 800, height: viewport, nativeScroll: true },
+    { top: 1_600, height: viewport },
+    { top: 2_400, height: viewport },
+    { top: 3_200, height: viewport },
+    { top: 4_000, height: viewport, nativeScroll: true },
+  ];
+  for (const [position, direction, controlled] of [
+    [0, 1, false],
+    [800, 1, false],
+    [1_600, -1, false],
+    [1_600, 1, true],
+    [2_400, -1, true],
+    [2_400, 1, true],
+    [3_200, -1, true],
+    [3_200, 1, false],
+    [4_000, -1, false],
+  ] as const) {
+    assert.equal(canControlFrameGesture(frames, position, viewport, direction), controlled, `${position}, ${direction}`);
+  }
+});
+
+test('unmarked pages retain boundary consumption and empty pages remain native', () => {
+  const frames: FrameBounds[] = [{ top: 0, height: 800 }, { top: 800, height: 800 }];
+  assert.equal(canControlFrameGesture(frames, 0, 800, -1), true);
+  assert.equal(canControlFrameGesture(frames, 800, 800, 1), true);
+  assert.equal(canControlFrameGesture([], 0, 800, 1), false);
+  assert.equal(canControlFrameGesture([{ top: 0, height: 800, nativeScroll: true }], 0, 800, -1), false);
+});
+
+test('tall controlled frames preserve interior reading before a native boundary', () => {
+  const viewport = 800;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true },
+    { top: viewport, height: 1_800 },
+    { top: 2_600, height: viewport, nativeScroll: true },
+  ];
+  assert.equal(canControlFrameGesture(frames, 800, viewport, 1), true);
+  assert.equal(canControlFrameGesture(frames, 1_480, viewport, 1), true);
+  assert.equal(canControlFrameGesture(frames, 1_800, viewport, 1), false);
+  assert.equal(canControlFrameGesture(frames, 1_800, viewport, -1), true);
+  assert.equal(canControlFrameGesture(frames, 800, viewport, -1), false);
+  frames[1].nativeScroll = true;
+  assert.equal(canControlFrameGesture(frames, 1_480, viewport, 1), false);
+});
+
+test('a wheel burst begun on a native frame stays native when it enters destinations', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(50, 0, false, true, false), { managed: false, direction: 0 });
+  for (const time of [100, 200, 300]) {
+    assert.deepEqual(gesture.update(50, time, false, true, true), { managed: false, direction: 0 });
+  }
+  assert.deepEqual(gesture.update(50, 600, false, true, true), { managed: true, direction: 1 });
+});
+
+test('controlled wheel momentum stays consumed at the native exit until a fresh gesture', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(50, 0, false, true, true), { managed: true, direction: 1 });
+  for (let time = 100; time <= 1_200; time += 100) {
+    assert.deepEqual(gesture.update(50, time, time < 800, true, false), { managed: true, direction: 0 });
+  }
+  assert.deepEqual(gesture.update(50, 1_500, false, true, false), { managed: false, direction: 0 });
+});
+
+test('a fresh wheel burst during a transition stays consumed at a native exit after the transition ends', () => {
+  const viewport = 800;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport },
+    { top: viewport, height: viewport },
+    { top: viewport * 2, height: viewport, nativeScroll: true },
+  ];
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(50, 0, false, true, canControlFrameGesture(frames, 0, viewport, 1)), {
+    managed: true, direction: 1,
+  });
+  const allowExit = canControlFrameGesture(frames, viewport, viewport, 1);
+  assert.equal(allowExit, false);
+  for (let time = 300; time <= 1_000; time += 100) {
+    assert.deepEqual(gesture.update(50, time, time < 800, true, allowExit), { managed: true, direction: 0 });
+  }
+  assert.deepEqual(gesture.update(50, 1_300, false, true, allowExit), { managed: false, direction: 0 });
+});
+
+test('a menu-consumed burst remains captured over a native frame until the next gesture', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(50, 0, false, true, false), { managed: false, direction: 0 });
+  gesture.consume(50);
+  for (const time of [100, 200, 300]) {
+    assert.deepEqual(gesture.update(50, time, false, true, false), { managed: true, direction: 0 });
+  }
+  assert.deepEqual(gesture.update(50, 600, false, true, false), { managed: false, direction: 0 });
 });
 
 test('normal frames move one frame at a time and stop at the first and last frame', () => {

@@ -1,4 +1,4 @@
-import { isViewportZoomed, nextFrameStop, WheelGesture, type FrameStop } from '../lib/frame-navigation';
+import { canControlFrameGesture, isViewportZoomed, nextFrameStop, WheelGesture, type FrameStop } from '../lib/frame-navigation';
 
 const frames = [...document.querySelectorAll<HTMLElement>('.screen-frame')];
 const main = document.querySelector('main');
@@ -11,11 +11,15 @@ if (frames.length > 1 && main) {
   let destination: FrameStop | undefined;
   let revision = 0;
   let effects: Animation[] = [];
-  let touch: { x: number; y: number; axis: 'x' | 'y' | null; consumed: boolean; native: boolean } | undefined;
+  let touch: { x: number; y: number; position: number; axis: 'x' | 'y' | null; consumed: boolean; native: boolean } | undefined;
 
   const zoomed = () => isViewportZoomed(window.visualViewport?.scale ?? 1);
   const available = () => !main.inert && !zoomed();
   const excluded = (target: EventTarget | null) => target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable], .main-menu, .phase-tools'));
+  const frameBounds = () => frames.map(frame => {
+    const rect = frame.getBoundingClientRect();
+    return { top: rect.top + scrollY, height: rect.height, nativeScroll: frame.dataset.frameScroll === 'native' };
+  });
   const canScrollInside = (target: EventTarget | null, direction: number) => {
     let element = target instanceof Element ? target : null;
     while (element && element !== main && element !== root) {
@@ -94,10 +98,8 @@ if (frames.length > 1 && main) {
   };
   const advance = (direction: number) => {
     if (destination || !available()) return;
-    const bounds = frames.map(frame => {
-      const rect = frame.getBoundingClientRect();
-      return { top: rect.top + scrollY, height: rect.height };
-    });
+    const bounds = frameBounds();
+    if (!canControlFrameGesture(bounds, scrollY, innerHeight, direction)) return;
     const stop = nextFrameStop(bounds, scrollY, innerHeight, direction);
     if (!stop) return;
     const origin = scrollY;
@@ -129,7 +131,10 @@ if (frames.length > 1 && main) {
     if (excluded(event.target)) return;
     const vertical = !event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX);
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;
-    const gesture = wheel.update(event.deltaY * unit, performance.now(), Boolean(destination), vertical && !canScrollInside(event.target, Math.sign(event.deltaY)));
+    const direction = Math.sign(event.deltaY);
+    const eligible = vertical && !canScrollInside(event.target, direction);
+    const allowFrame = canControlFrameGesture(frameBounds(), scrollY, innerHeight, direction);
+    const gesture = wheel.update(event.deltaY * unit, performance.now(), Boolean(destination), eligible, allowFrame);
     if (!gesture.managed || !event.cancelable) return;
     event.preventDefault();
     if (gesture.direction) advance(gesture.direction);
@@ -141,7 +146,7 @@ if (frames.length > 1 && main) {
     if (zoomed() || excluded(event.target)) return;
     const point = event.touches[0];
     // A background gesture begun while the menu closes must stay consumed after unlock.
-    touch = { x: point.clientX, y: point.clientY, axis: null, consumed: Boolean(destination) || main.inert, native: false };
+    touch = { x: point.clientX, y: point.clientY, position: scrollY, axis: null, consumed: Boolean(destination) || main.inert, native: false };
   }, { passive: true });
   document.addEventListener('touchmove', event => {
     if (!touch || zoomed()) return;
@@ -151,7 +156,8 @@ if (frames.length > 1 && main) {
     const dy = touch.y - event.touches[0].clientY;
     if (!touch.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 8) {
       touch.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-      touch.native = canScrollInside(event.target, Math.sign(dy));
+      touch.native = canScrollInside(event.target, Math.sign(dy))
+        || (!touch.consumed && !canControlFrameGesture(frameBounds(), touch.position, innerHeight, Math.sign(dy)));
     }
     if (touch.axis !== 'y' || touch.native || !event.cancelable) return;
     event.preventDefault();

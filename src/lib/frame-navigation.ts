@@ -1,4 +1,4 @@
-export interface FrameBounds { top: number; height: number }
+export interface FrameBounds { top: number; height: number; nativeScroll?: boolean }
 export interface FrameStop { index: number; offset: number | 'end' }
 
 export function isViewportZoomed(scale: number): boolean {
@@ -24,6 +24,17 @@ export function nextFrameStop(frames: FrameBounds[], position: number, viewport:
   }
 }
 
+export function canControlFrameGesture(frames: FrameBounds[], position: number, viewport: number, direction: number): boolean {
+  if (!frames.length) return false;
+  let index = 0;
+  for (let i = 0; i < frames.length; i++) {
+    if (frames[i].top <= position + 2) index = i;
+  }
+  if (frames[index].nativeScroll) return false;
+  const stop = nextFrameStop(frames, position, viewport, direction);
+  return !stop || !frames[stop.index].nativeScroll;
+}
+
 // Trackpad momentum belongs to the same gesture until the wheel goes quiet.
 export class WheelGesture {
   private lastEvent = -Infinity;
@@ -38,11 +49,11 @@ export class WheelGesture {
     this.managed = true;
   }
 
-  update(delta: number, time: number, busy: boolean, eligible: boolean) {
+  update(delta: number, time: number, busy: boolean, eligible: boolean, allowFrame = true) {
     if (time - this.lastEvent > 240) {
       this.amount = 0;
       this.consumed = busy;
-      this.managed = eligible;
+      this.managed = eligible && (busy || allowFrame);
     }
     this.lastEvent = time;
     if (!eligible) this.consumed = true;

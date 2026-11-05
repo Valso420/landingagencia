@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import windowImage from '../assets/airplane-window.png';
 ---
-<section class="hero-section screen-frame" id="inicio" aria-labelledby="hero-title" data-header-theme="light">
+<section class="hero-section screen-frame" id="inicio" aria-labelledby="hero-title" data-header-theme="light" data-frame-scroll="native">
   <div class="window-hero" data-window-scene data-phase="dia">
     <div class="window-scene" aria-hidden="true">
       <Image class="window-photo" src={windowImage} alt="" widths={[512, 768, 1024]} sizes="(min-width: 480px) 596px, 124vw" format="webp" quality={88} loading="eager" fetchpriority="high" />
