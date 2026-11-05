@@ -9,6 +9,8 @@ if (frames.length > 1 && main) {
   const wheel = new WheelGesture();
   let animation = 0;
   let destination: FrameStop | undefined;
+  let revision = 0;
+  let effects: Animation[] = [];
   let touch: { x: number; y: number; axis: 'x' | 'y' | null; consumed: boolean; native: boolean } | undefined;
 
   const available = () => !main.inert && (window.visualViewport?.scale ?? 1) <= 1;
@@ -30,13 +32,60 @@ if (frames.length > 1 && main) {
     return Math.max(0, Math.min(bounds.top + scrollY + offset, root.scrollHeight - innerHeight));
   };
   const cancel = () => {
+    revision++;
     cancelAnimationFrame(animation);
     animation = 0;
     destination = undefined;
-    root.classList.remove('is-frame-transitioning');
+    effects.forEach(effect => effect.cancel());
+    effects = [];
+    frames.forEach(frame => frame.classList.remove('frame-outgoing', 'frame-incoming'));
+    root.classList.remove('is-frame-transitioning', 'is-frame-blurring');
+    window.dispatchEvent(new Event('framechange'));
+  };
+  const reveal = (stop: FrameStop) => {
+    window.scrollTo({ top: targetPosition(stop), behavior: 'instant' });
+    window.dispatchEvent(new Event('framechange'));
+  };
+  const blurTo = async (source: HTMLElement, stop: FrameStop) => {
+    const currentRevision = revision;
+    const target = frames[stop.index];
+    const active = () => currentRevision === revision && available();
+    root.classList.add('is-frame-blurring');
+    try {
+      // Give incoming photos a short head start without delaying navigation indefinitely.
+      let timeout = 0;
+      await Promise.race([
+        Promise.all([...target.querySelectorAll('img')].map(async image => {
+          image.loading = 'eager';
+          try { await image.decode(); } catch { /* A missing image must not block navigation. */ }
+        })),
+        new Promise(resolve => { timeout = window.setTimeout(resolve, 300); }),
+      ]);
+      clearTimeout(timeout);
+      if (!active()) return;
+      // Keep the outgoing frame visually still while the document moves to its target.
+      const shift = targetPosition(stop) - scrollY;
+      source.classList.add('frame-outgoing');
+      target.classList.add('frame-incoming');
+      const timing: KeyframeAnimationOptions = { duration: 800, easing: 'ease-in-out', fill: 'both' };
+      effects.push(source.animate([
+        { opacity: 1, filter: 'blur(0px)', transform: `translateY(${shift}px)` },
+        { opacity: 0, filter: 'blur(12px)', transform: `translateY(${shift}px)` },
+      ], timing));
+      effects.push(target.animate([
+        { opacity: 0, filter: 'blur(12px)' },
+        { opacity: 1, filter: 'blur(0px)' },
+      ], timing));
+      reveal(stop);
+      await Promise.all(effects.map(effect => effect.finished));
+    } catch {
+      if (active()) reveal(stop);
+    } finally {
+      if (currentRevision === revision) cancel();
+    }
   };
   const advance = (direction: number) => {
-    if (animation || !available()) return;
+    if (destination || !available()) return;
     const bounds = frames.map(frame => {
       const rect = frame.getBoundingClientRect();
       return { top: rect.top + scrollY, height: rect.height };
@@ -47,6 +96,14 @@ if (frames.length > 1 && main) {
     const start = performance.now();
     destination = stop;
     root.classList.add('is-frame-transitioning');
+    window.scrollTo({ top: origin, behavior: 'instant' });
+    let sourceIndex = 0;
+    bounds.forEach((frame, index) => { if (frame.top <= origin + 2) sourceIndex = index; });
+    const source = frames[sourceIndex];
+    if (source !== frames[stop.index] && !source.matches('.hero-section') && !frames[stop.index].matches('.hero-section') && !reducedMotion.matches) {
+      void blurTo(source, stop);
+      return;
+    }
     const tick = (time: number) => {
       if (!available()) { cancel(); return; }
       const progress = reducedMotion.matches ? 1 : Math.min(1, (time - start) / 800);
@@ -63,7 +120,7 @@ if (frames.length > 1 && main) {
     if (!available() || excluded(event.target)) return;
     const vertical = !event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX);
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;
-    const gesture = wheel.update(event.deltaY * unit, performance.now(), Boolean(animation), vertical && !canScrollInside(event.target, Math.sign(event.deltaY)));
+    const gesture = wheel.update(event.deltaY * unit, performance.now(), Boolean(destination), vertical && !canScrollInside(event.target, Math.sign(event.deltaY)));
     if (!gesture.managed || !event.cancelable) return;
     event.preventDefault();
     if (gesture.direction) advance(gesture.direction);
@@ -74,7 +131,7 @@ if (frames.length > 1 && main) {
     if (event.touches.length !== 1) { cancel(); return; }
     if (!available() || excluded(event.target)) return;
     const point = event.touches[0];
-    touch = { x: point.clientX, y: point.clientY, axis: null, consumed: Boolean(animation), native: false };
+    touch = { x: point.clientX, y: point.clientY, axis: null, consumed: Boolean(destination), native: false };
   }, { passive: true });
   document.addEventListener('touchmove', event => {
     if (!touch || !available()) return;
@@ -102,6 +159,7 @@ if (frames.length > 1 && main) {
   window.addEventListener('hashchange', cancel);
   window.addEventListener('popstate', cancel);
   window.addEventListener('pagehide', cancel);
+  window.addEventListener('resize', () => { if (root.classList.contains('is-frame-blurring')) cancel(); });
   reducedMotion.addEventListener('change', () => {
     if (destination) window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
     cancel();

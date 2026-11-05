@@ -4,7 +4,9 @@
 
 Preserve the approved mobile hierarchy while adapting each screen to the available width and visible viewport height (`100dvh`, with `100svh` fallback). The desktop layout retains the hierarchy, complete window frame, wing and readable HTML text. Private design references and project discussions are managed outside the public repository.
 
-Sections use native vertical scroll snapping as a fallback. With JavaScript, each vertical swipe or wheel/trackpad burst advances at most one frame through an 800 ms eased transition. Further movement from the same gesture is consumed, including momentum after the transition ends. New gestures during a transition are not queued. Horizontal carousels, pinch zoom, menu scrolling, keyboard navigation and direct links retain their native behavior. Reduced motion makes frame changes immediate.
+Sections use native vertical scroll snapping as a fallback. With JavaScript, each vertical swipe or wheel/trackpad burst advances at most one frame. Transitions to or from the home hero retain the 800 ms eased scroll. Other frame changes use an 800 ms blur crossfade: both frames briefly overlap in place beneath the fixed, sharp and interactive header. Web Animations handles opacity and blur without an animation library or document snapshots.
+
+Further movement from the same gesture is consumed, including momentum after the transition ends. New gestures during a transition are not queued. Horizontal carousels, pinch zoom, menu scrolling, keyboard navigation and direct links retain their native behavior. Reduced motion makes frame changes immediate. Cancelling a transition clears its effects and invalidates pending callbacks so links, focus and history remain in control.
 
 Long itineraries, enlarged text and very short viewports can expand a screen so content remains accessible. Gestures move through that content before advancing to the next frame; do not clip text to force a fixed height.
 

@@ -18,6 +18,7 @@
 @supports (height: 100dvh) { :root { --screen-height: 100dvh; } }
 html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
 html.is-frame-transitioning { scroll-behavior: auto; scroll-snap-type: none; }
+html.is-frame-blurring main { pointer-events: none; }
 body { margin: 0; }
 .screen-frame {
   position: relative;
@@ -26,6 +27,8 @@ body { margin: 0; }
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
+.is-frame-blurring .screen-frame.frame-incoming { z-index: 3; }
+.is-frame-blurring .screen-frame.frame-outgoing { z-index: 4; }
 h1,h2,h3,p { margin: 0; }
 h1,h2,h3 { font-family: 'Montserrat', sans-serif; }
 a { color: inherit; text-decoration: none; }

@@ -41,6 +41,7 @@ const links = [
       themeUpdate = 0;
       const sampleY = header.getBoundingClientRect().height / 2;
       const frame = themedFrames.find(element => {
+        if (element.classList.contains('frame-outgoing')) return false;
         const bounds = element.getBoundingClientRect();
         return bounds.top <= sampleY && bounds.bottom > sampleY;
       });
@@ -50,6 +51,7 @@ const links = [
       if (!themeUpdate) themeUpdate = requestAnimationFrame(updateTheme);
     };
     window.addEventListener('scroll', scheduleTheme, { passive: true });
+    window.addEventListener('framechange', updateTheme);
     window.addEventListener('resize', scheduleTheme);
     window.addEventListener('pageshow', scheduleTheme);
     document.fonts.ready.then(scheduleTheme);
