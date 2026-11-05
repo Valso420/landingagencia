@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import windowImage from '../assets/airplane-window.png';
 import { agency } from '../config/agency';
 interface Props { overlay?: boolean }
 const { overlay = false } = Astro.props;
@@ -18,6 +20,9 @@ const links = [
     </button>
   </div>
   <nav id="main-menu" class="main-menu" aria-label="Navegación principal">
+    <div class="menu-backdrop" aria-hidden="true">
+      <Image class="menu-window" src={windowImage} alt="" widths={[512, 768, 1024]} sizes="(min-width: 800px) 660px, 124vw" format="webp" quality={88} loading="lazy" />
+    </div>
     <div class="menu-inner">
       <p class="menu-brand">{agency.name}</p>
       <ol>
