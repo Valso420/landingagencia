@@ -12,6 +12,8 @@ Long itineraries, enlarged text and very short viewports can expand a screen so 
 
 The transparent navigation stays fixed over the screens and switches foreground color for light backgrounds. Its open menu reuses the local window photograph at 22% opacity and shares the hero's solar lighting, including on direct visits to other pages. Hero and menu CTAs use the same bottom inset and maximum width. Flexible spacing adapts to viewport height; short screens retain a scrollable menu surface and keyboard focus handling. Without JavaScript, navigation remains visible in normal flow. During the first transition, the window background and its lighting stay fixed while the title and destination button move upward with the screen. The hero clips its background as the next opaque screen covers it. Reduced motion and the no-JavaScript fallback keep the background attached to the hero; solar lighting is preserved.
 
+The menu opens and closes with an opacity fade; its text and buttons appear in a short sequence over the stationary window. Repeated toggles reverse from the current opacity. Background scrolling stays locked until closing finishes, and closing links leave the focus order immediately. Native navigation and reduced motion complete the state change without waiting for animation.
+
 ## Window and requested exports
 
 The supplied window asset is a provisional AI-generated image with the frame, wing, sky and clouds flattened together. Moving that photograph would move the cabin or duplicate the wing. This version keeps the image still and applies solar lighting through an aligned interior mask. No decorative cloud animation or pause control is needed for this static image. Reduced-motion preferences retain the current light and remove transitions.

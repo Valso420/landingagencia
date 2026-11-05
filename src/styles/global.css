@@ -18,7 +18,7 @@
 
 * { box-sizing: border-box; }
 @supports (height: 100dvh) { :root { --screen-height: 100dvh; } }
-html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
+html { scroll-behavior: smooth; scroll-snap-type: y mandatory; scrollbar-gutter: stable; }
 html.is-frame-transitioning { scroll-behavior: auto; scroll-snap-type: none; }
 html.is-frame-blurring main { pointer-events: none; }
 body { margin: 0; }

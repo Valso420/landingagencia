@@ -22,7 +22,7 @@ const links = [
   <nav id="main-menu" class="main-menu" aria-label="Navegación principal">
     <div class="menu-backdrop" data-window-scene data-phase="dia" aria-hidden="true">
       <div class="menu-window">
-        <Image class="window-photo" src={windowImage} alt="" widths={[512, 768, 1024]} sizes="(min-width: 800px) 660px, 124vw" format="webp" quality={88} loading="lazy" />
+        <Image class="window-photo" src={windowImage} alt="" widths={[512, 768, 1024]} sizes="(min-width: 800px) 660px, 124vw" format="webp" quality={88} loading="eager" fetchpriority="low" />
         <div class="window-light window-light--night"></div>
         <div class="window-light window-light--dawn"></div>
         <div class="window-light window-light--warm"></div>
@@ -66,25 +66,70 @@ const links = [
     window.addEventListener('pageshow', scheduleTheme);
     document.fonts.ready.then(scheduleTheme);
     updateTheme();
-    const setOpen = (open: boolean, returnFocus = false) => {
-      nav.hidden = !open;
+    const main = document.querySelector('main');
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const surfaces = [nav, ...nav.querySelectorAll<HTMLElement>('.menu-brand, li, .menu-social')];
+    let isOpen = false;
+    let revision = 0;
+    let effects: Animation[] = [];
+    const settle = () => {
+      nav.hidden = !isOpen;
+      nav.inert = !isOpen;
+      header.classList.toggle('is-open', isOpen);
+      document.body.classList.toggle('menu-is-open', isOpen);
+      if (main) main.inert = isOpen;
+      effects.forEach(effect => effect.cancel());
+      effects = [];
+    };
+    const setOpen = (open: boolean, returnFocus = false, animate = true) => {
+      if (open === isOpen && animate) return;
+      const wasHidden = nav.hidden;
+      const opacity = surfaces.map(element => wasHidden ? 0 : Number(getComputedStyle(element).opacity));
+      const currentRevision = ++revision;
+      effects.forEach(effect => effect.cancel());
+      effects = [];
+      isOpen = open;
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
-      header.classList.toggle('is-open', open);
-      document.body.classList.toggle('menu-is-open', open);
-      const main = document.querySelector('main');
-      if (main) main.inert = open;
-      if (open) nav.querySelector<HTMLAnchorElement>('a')?.focus();
-      else if (returnFocus) toggle.focus();
+      if (open) {
+        nav.hidden = false;
+        nav.inert = false;
+        header.classList.add('is-open');
+        document.body.classList.add('menu-is-open');
+        if (main) main.inert = true;
+        if (wasHidden) nav.scrollTop = 0;
+        nav.querySelector<HTMLAnchorElement>('a')?.focus({ preventScroll: true });
+      } else {
+        if (returnFocus || nav.contains(document.activeElement)) toggle.focus({ preventScroll: true });
+        nav.inert = true;
+      }
+      if (!animate || reducedMotion.matches) { settle(); return; }
+      // Only opacity changes: the fixed window and its solar layers never move.
+      effects = surfaces.map((element, index) => element.animate([
+        { opacity: opacity[index] },
+        { opacity: open ? 1 : 0 },
+      ], {
+        duration: index === 0 ? 360 : open ? 280 : 180,
+        delay: open && wasHidden && index > 0 ? (index - 1) * 30 : 0,
+        easing: 'ease-in-out',
+        fill: 'both',
+      }));
+      void Promise.all(effects.map(effect => effect.finished)).then(() => {
+        if (revision === currentRevision) settle();
+      }, () => { /* Reversing the menu cancels the previous animation. */ });
     };
     toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
     nav.addEventListener('click', (event) => {
-      if ((event.target as Element).closest('a')) setOpen(false);
+      // Release scroll and focus immediately for native links, including same-page anchors.
+      if ((event.target as Element).closest('a')) setOpen(false, true, false);
     });
+    reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) { revision++; settle(); } });
+    window.addEventListener('pagehide', () => setOpen(false, false, false));
     header.addEventListener('keydown', (event) => {
-      if (toggle.getAttribute('aria-expanded') !== 'true') return;
+      if (nav.hidden) return;
       if (event.key === 'Escape') { event.preventDefault(); setOpen(false, true); }
       if (event.key !== 'Tab') return;
+      if (!isOpen) { event.preventDefault(); toggle.focus({ preventScroll: true }); return; }
       const focusable = [toggle, ...nav.querySelectorAll<HTMLAnchorElement>('a[href]')];
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
