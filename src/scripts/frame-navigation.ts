@@ -1,4 +1,4 @@
-import { nextFrameStop, WheelGesture, type FrameStop } from '../lib/frame-navigation';
+import { isViewportZoomed, nextFrameStop, WheelGesture, type FrameStop } from '../lib/frame-navigation';
 
 const frames = [...document.querySelectorAll<HTMLElement>('.screen-frame')];
 const main = document.querySelector('main');
@@ -13,7 +13,8 @@ if (frames.length > 1 && main) {
   let effects: Animation[] = [];
   let touch: { x: number; y: number; axis: 'x' | 'y' | null; consumed: boolean; native: boolean } | undefined;
 
-  const available = () => !main.inert && (window.visualViewport?.scale ?? 1) <= 1;
+  const zoomed = () => isViewportZoomed(window.visualViewport?.scale ?? 1);
+  const available = () => !main.inert && !zoomed();
   const excluded = (target: EventTarget | null) => target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable], .main-menu, .phase-tools'));
   const canScrollInside = (target: EventTarget | null, direction: number) => {
     let element = target instanceof Element ? target : null;
@@ -116,7 +117,7 @@ if (frames.length > 1 && main) {
   };
 
   document.addEventListener('wheel', event => {
-    if (event.ctrlKey || event.metaKey || (window.visualViewport?.scale ?? 1) > 1) { cancel(); return; }
+    if (event.ctrlKey || event.metaKey || zoomed()) { cancel(); return; }
     if (!available() || excluded(event.target)) return;
     const vertical = !event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX);
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;

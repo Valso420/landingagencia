@@ -1,6 +1,11 @@
 export interface FrameBounds { top: number; height: number }
 export interface FrameStop { index: number; offset: number | 'end' }
 
+export function isViewportZoomed(scale: number): boolean {
+  // Mobile browsers can report a scale slightly above 1 at the default zoom.
+  return scale > 1.01;
+}
+
 export function nextFrameStop(frames: FrameBounds[], position: number, viewport: number, direction: number): FrameStop | undefined {
   if (!frames.length || !direction) return;
   let index = 0;

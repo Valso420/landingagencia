@@ -34,7 +34,7 @@ const links = [
       <ol>
         {links.map(link => <li><a href={link.href}>{link.title}</a></li>)}
       </ol>
-      <a class="button menu-social" href={agency.contact.instagram ?? '/contacto/'} target={agency.contact.instagram ? '_blank' : undefined} rel={agency.contact.instagram ? 'noopener noreferrer' : undefined}>Instagram</a>
+      <a class="button menu-social" href={agency.contact.instagram ?? '/contacto/'} target={agency.contact.instagram ? '_blank' : undefined} rel={agency.contact.instagram ? 'noopener noreferrer' : undefined}><span class="menu-social-label">Instagram</span></a>
     </div>
   </nav>
 </header>
@@ -92,7 +92,7 @@ const links = [
     };
     window.addEventListener('resize', () => { if (!nav.hidden) updateBackdrop(); });
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    const surfaces = [nav, ...nav.querySelectorAll<HTMLElement>('.menu-brand, li, .menu-social')];
+    const surfaces = [nav, ...nav.querySelectorAll<HTMLElement>('.menu-brand, li, .menu-social-label')];
     let isOpen = false;
     let revision = 0;
     let effects: Animation[] = [];

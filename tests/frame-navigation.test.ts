@@ -1,6 +1,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { nextFrameStop, WheelGesture, type FrameBounds } from '../src/lib/frame-navigation';
+import { isViewportZoomed, nextFrameStop, WheelGesture, type FrameBounds } from '../src/lib/frame-navigation';
+
+test('viewport scale rounding does not disable frame navigation at default zoom', () => {
+  for (const scale of [1, 1.0000001192092896, 1.0000009536743164, 1.001]) {
+    assert.equal(isViewportZoomed(scale), false);
+  }
+});
+
+test('intentional zoom retains native panning', () => {
+  for (const scale of [1.05, 1.25, 2, 3]) {
+    assert.equal(isViewportZoomed(scale), true);
+  }
+});
 
 test('a long momentum stream advances only once, including after the transition ends', () => {
   const gesture = new WheelGesture();
