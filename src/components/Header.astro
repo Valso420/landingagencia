@@ -21,6 +21,7 @@ const links = [
   </div>
   <nav id="main-menu" class="main-menu" aria-label="Navegación principal">
     <div class="menu-backdrop" data-window-scene data-phase="dia" aria-hidden="true">
+      <img class="menu-photo" alt="" hidden />
       <div class="menu-window">
         <Image class="window-photo" src={windowImage} alt="" widths={[512, 768, 1024]} sizes="(min-width: 800px) 660px, 124vw" format="webp" quality={88} loading="eager" fetchpriority="low" />
         <div class="window-light window-light--night"></div>
@@ -67,6 +68,29 @@ const links = [
     document.fonts.ready.then(scheduleTheme);
     updateTheme();
     const main = document.querySelector('main');
+    const photo = nav.querySelector<HTMLImageElement>('.menu-photo')!;
+    const windowBackdrop = nav.querySelector<HTMLElement>('.menu-window')!;
+    const frames = [...document.querySelectorAll<HTMLElement>('.screen-frame')];
+    const updateBackdrop = () => {
+      const frame = frames.find(element => {
+        if (element.classList.contains('frame-outgoing')) return false;
+        const bounds = element.getBoundingClientRect();
+        return bounds.top <= innerHeight / 2 && bounds.bottom > innerHeight / 2;
+      });
+      const source = frame?.querySelector<HTMLImageElement>('[data-menu-background]');
+      photo.hidden = !source;
+      windowBackdrop.hidden = Boolean(source);
+      if (!source) return;
+      const bounds = source.getBoundingClientRect();
+      const style = getComputedStyle(source);
+      photo.src = source.currentSrc || source.src;
+      Object.assign(photo.style, {
+        left: `${bounds.left}px`, top: `${bounds.top}px`,
+        width: `${bounds.width}px`, height: `${bounds.height}px`,
+        objectFit: style.objectFit, objectPosition: style.objectPosition,
+      });
+    };
+    window.addEventListener('resize', () => { if (!nav.hidden) updateBackdrop(); });
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     const surfaces = [nav, ...nav.querySelectorAll<HTMLElement>('.menu-brand, li, .menu-social')];
     let isOpen = false;
@@ -92,6 +116,7 @@ const links = [
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
       if (open) {
+        if (wasHidden) updateBackdrop();
         nav.hidden = false;
         nav.inert = false;
         header.classList.add('is-open');
@@ -104,13 +129,17 @@ const links = [
         nav.inert = true;
       }
       if (!animate || reducedMotion.matches) { settle(); return; }
-      // Only opacity changes: the fixed window and its solar layers never move.
+      const backgroundDuration = 260 * Math.abs(Number(open) - opacity[0]);
+      const contentExitDuration = opacity.slice(1).some(value => value > 0) ? 180 : 0;
+      // Keep the background opaque while menu text is visible, including on reversal.
       effects = surfaces.map((element, index) => element.animate([
         { opacity: opacity[index] },
         { opacity: open ? 1 : 0 },
       ], {
-        duration: index === 0 ? 360 : open ? 280 : 180,
-        delay: open && wasHidden && index > 0 ? (index - 1) * 30 : 0,
+        duration: index === 0 ? backgroundDuration : open ? 240 : contentExitDuration,
+        delay: index === 0
+          ? open ? 0 : contentExitDuration
+          : open ? backgroundDuration + (wasHidden ? (index - 1) * 20 : 0) : 0,
         easing: 'ease-in-out',
         fill: 'both',
       }));
