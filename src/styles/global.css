@@ -10,6 +10,8 @@
   --gray: #b7b5af;
   --screen-height: 100svh;
   --header-height: calc(76px + env(safe-area-inset-top, 0px));
+  --screen-cta-inset: max(24px, env(safe-area-inset-bottom, 0px));
+  --screen-cta-max-width: 420px;
   font-synthesis: none;
   font-optical-sizing: auto;
 }
@@ -142,8 +144,8 @@ main:focus { outline: none; }
 .menu-social { width: 100%; }
 .menu-enhanced .main-menu { position: fixed; inset: 0; isolation: isolate; overflow-y: auto; overscroll-behavior: contain; padding: 0 max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px)); }
 .menu-enhanced .menu-backdrop { display: block; position: fixed; inset: 0; z-index: -1; overflow: hidden; opacity: .22; pointer-events: none; }
-.menu-window { position: absolute; width: min(124.1vw, calc(var(--screen-height) * .64), 660px); height: auto; max-width: none; left: 50%; top: calc(var(--screen-height) * .46); transform: translate(-50%, -50%); mask-image: linear-gradient(transparent, #000 4%, #000 93%, transparent); }
-.menu-enhanced .menu-inner { min-height: var(--screen-height); display: grid; grid-template-rows: minmax(min-content, 1fr) auto minmax(min-content, 1fr); gap: 24px; max-width: 390px; padding: max(clamp(24px, 4.62dvh, 39px), env(safe-area-inset-top, 0px)) 0 max(clamp(24px, 4.62dvh, 39px), env(safe-area-inset-bottom, 0px)); }
+.menu-window { position: absolute; width: min(124.1vw, calc(var(--screen-height) * .64), 660px); aspect-ratio: 2/3; left: 50%; top: calc(var(--screen-height) * .46); transform: translate(-50%, -50%); mask-image: linear-gradient(transparent, #000 4%, #000 93%, transparent); }
+.menu-enhanced .menu-inner { min-height: var(--screen-height); display: grid; grid-template-rows: minmax(min-content, 1fr) auto minmax(min-content, 1fr); gap: 24px; max-width: var(--screen-cta-max-width); padding: max(clamp(24px, 4.62dvh, 39px), env(safe-area-inset-top, 0px)) 0 var(--screen-cta-inset); }
 .menu-enhanced .menu-brand { align-self: start; margin-top: calc(var(--header-height) - 33px); }
 .menu-enhanced .menu-social { align-self: end; }
 .menu-is-open { overflow: hidden; }
@@ -156,6 +158,7 @@ main:focus { outline: none; }
 .site-header:not(.menu-enhanced) ~ main .hero-contrast { position: absolute; }
 
 .hero-section { background: var(--night); z-index: 0; clip-path: inset(0); }
+[data-window-scene] { --scene-night: 0; --scene-warm: 0; --scene-dawn: 0; }
 .window-hero {
   position: relative;
   isolation: isolate;
@@ -164,9 +167,6 @@ main:focus { outline: none; }
   height: var(--screen-height);
   margin: 0 auto;
   color: white;
-  --scene-night: 0;
-  --scene-warm: 0;
-  --scene-dawn: 0;
 }
 .window-scene {
   position: fixed;
@@ -203,7 +203,7 @@ main:focus { outline: none; }
   text-align: center;
   pointer-events: none;
 }
-.hero-cta { position: absolute; bottom: max(24px, env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); width: min(calc(100% - 48px), 420px); min-height: 49px; padding: 0 16px; font-size: 14px; }
+.hero-cta { position: absolute; bottom: var(--screen-cta-inset); left: 50%; transform: translateX(-50%); width: min(calc(100% - 48px), var(--screen-cta-max-width)); min-height: 49px; padding: 0 16px; font-size: 14px; }
 .phase-tools { position: fixed; z-index: 45; right: 12px; bottom: 12px; background: #252525f2; color: white; border: 1px solid #ffffff40; border-radius: 14px; max-width: calc(100vw - 24px); font-size: 12px; box-shadow: 0 4px 20px #0003; }
 .phase-tools summary { padding: 10px 14px; cursor: pointer; min-height: 40px; }
 .phase-tools summary span { margin-left: 12px; }

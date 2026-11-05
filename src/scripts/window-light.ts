@@ -1,20 +1,21 @@
 import { getSceneLighting, PHASE_LABELS } from '../lib/solar';
 
-const scene = document.querySelector<HTMLElement>('[data-window-scene]');
+const scenes = document.querySelectorAll<HTMLElement>('[data-window-scene]');
 
-if (scene) {
+if (scenes.length) {
   const labels = document.querySelectorAll<HTMLElement>('[data-phase-label]');
   const picker = import.meta.env.DEV ? document.querySelector<HTMLSelectElement>('[data-phase-picker]') : null;
   let requestedPhase = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('fase') : null;
   let timer: number | undefined;
 
   function refreshLighting() {
-    if (!scene) return;
     const lighting = getSceneLighting(new Date(), requestedPhase, import.meta.env.DEV);
-    scene.style.setProperty('--scene-night', String(lighting.night));
-    scene.style.setProperty('--scene-warm', String(lighting.warm));
-    scene.style.setProperty('--scene-dawn', String(lighting.dawn));
-    scene.dataset.phase = lighting.phase;
+    scenes.forEach(scene => {
+      scene.style.setProperty('--scene-night', String(lighting.night));
+      scene.style.setProperty('--scene-warm', String(lighting.warm));
+      scene.style.setProperty('--scene-dawn', String(lighting.dawn));
+      scene.dataset.phase = lighting.phase;
+    });
     labels.forEach((label) => { label.textContent = `${PHASE_LABELS[lighting.phase]} · Buenos Aires`; });
   }
 

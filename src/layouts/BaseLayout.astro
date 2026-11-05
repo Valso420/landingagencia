@@ -28,6 +28,7 @@ const { title = agency.name, description = agency.description, hideHeader = fals
     {!hideHeader && <Header overlay={overlayHeader} />}
     <main id="contenido" tabindex="-1"><slot /></main>
     <script>
+      import '../scripts/window-light';
       import '../scripts/frame-navigation';
     </script>
   </body>

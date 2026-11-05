@@ -20,8 +20,13 @@ const links = [
     </button>
   </div>
   <nav id="main-menu" class="main-menu" aria-label="Navegación principal">
-    <div class="menu-backdrop" aria-hidden="true">
-      <Image class="menu-window" src={windowImage} alt="" widths={[512, 768, 1024]} sizes="(min-width: 800px) 660px, 124vw" format="webp" quality={88} loading="lazy" />
+    <div class="menu-backdrop" data-window-scene data-phase="dia" aria-hidden="true">
+      <div class="menu-window">
+        <Image class="window-photo" src={windowImage} alt="" widths={[512, 768, 1024]} sizes="(min-width: 800px) 660px, 124vw" format="webp" quality={88} loading="lazy" />
+        <div class="window-light window-light--night"></div>
+        <div class="window-light window-light--dawn"></div>
+        <div class="window-light window-light--warm"></div>
+      </div>
     </div>
     <div class="menu-inner">
       <p class="menu-brand">{agency.name}</p>
