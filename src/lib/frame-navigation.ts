@@ -31,6 +31,13 @@ export class WheelGesture {
   private consumed = false;
   private managed = false;
 
+  consume(time: number) {
+    this.lastEvent = time;
+    this.amount = 0;
+    this.consumed = true;
+    this.managed = true;
+  }
+
   update(delta: number, time: number, busy: boolean, eligible: boolean) {
     if (time - this.lastEvent > 240) {
       this.amount = 0;

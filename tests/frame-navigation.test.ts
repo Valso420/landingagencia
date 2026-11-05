@@ -44,6 +44,23 @@ test('a gesture that starts during a transition is discarded instead of queued',
   assert.equal(gesture.update(50, 2_000, false, true).direction, 1);
 });
 
+test('wheel momentum from a locked menu is consumed after the page unlocks', () => {
+  const gesture = new WheelGesture();
+  for (const time of [0, 50, 100, 150]) gesture.consume(time);
+  for (const time of [200, 250, 300, 350]) {
+    assert.deepEqual(gesture.update(50, time, false, true), { managed: true, direction: 0 });
+  }
+  assert.deepEqual(gesture.update(50, 650, false, true), { managed: true, direction: 1 });
+});
+
+test('menu locking consumes an earlier native horizontal stream too', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(20, 0, false, false), { managed: false, direction: 0 });
+  gesture.consume(50);
+  assert.deepEqual(gesture.update(50, 100, false, true), { managed: true, direction: 0 });
+  assert.deepEqual(gesture.update(-50, 400, false, true), { managed: true, direction: -1 });
+});
+
 test('an ineligible horizontal or nested gesture remains native for its whole stream', () => {
   const gesture = new WheelGesture();
   assert.deepEqual(gesture.update(60, 0, false, false), { managed: false, direction: 0 });

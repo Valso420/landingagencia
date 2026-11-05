@@ -8,6 +8,8 @@ Sections use native vertical scroll snapping as a fallback. With JavaScript, eac
 
 Further movement from the same gesture is consumed, including momentum after the transition ends. New gestures during a transition are not queued. Horizontal carousels, pinch zoom, menu scrolling, keyboard navigation and direct links retain their native behavior. Reduced motion makes frame changes immediate. Cancelling a transition clears its effects and invalidates pending callbacks so links, focus and history remain in control.
 
+Opening the menu during a frame transition immediately settles the selected frame before capturing the menu background and locking scroll. A background touch begun while the menu closes remains consumed until the finger lifts, so unlocking cannot turn that gesture into free scrolling. Wheel momentum from the locked menu is also consumed until the next distinct gesture; scrolling inside the open menu remains native.
+
 Viewport scales within 1% of the default zoom are treated as unzoomed to tolerate mobile rounding. Larger zoom levels retain native panning instead of frame navigation.
 
 Long itineraries, enlarged text and very short viewports can expand a screen so content remains accessible. Gestures move through that content before advancing to the next frame; do not clip text to force a fixed height.

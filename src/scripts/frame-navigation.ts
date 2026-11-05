@@ -43,6 +43,13 @@ if (frames.length > 1 && main) {
     root.classList.remove('is-frame-transitioning', 'is-frame-blurring');
     window.dispatchEvent(new Event('framechange'));
   };
+  const interrupt = (event: Event) => {
+    const opensMenu = event.target instanceof Element && event.target.closest('.menu-toggle')
+      && (!(event instanceof KeyboardEvent) || event.key === 'Enter' || event.key === ' ');
+    // Settle the selected frame before the menu captures its background and locks scroll.
+    if (opensMenu && destination) window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
+    cancel();
+  };
   const reveal = (stop: FrameStop) => {
     window.scrollTo({ top: targetPosition(stop), behavior: 'instant' });
     window.dispatchEvent(new Event('framechange'));
@@ -118,7 +125,8 @@ if (frames.length > 1 && main) {
 
   document.addEventListener('wheel', event => {
     if (event.ctrlKey || event.metaKey || zoomed()) { cancel(); return; }
-    if (!available() || excluded(event.target)) return;
+    if (main.inert) { wheel.consume(performance.now()); return; }
+    if (excluded(event.target)) return;
     const vertical = !event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX);
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;
     const gesture = wheel.update(event.deltaY * unit, performance.now(), Boolean(destination), vertical && !canScrollInside(event.target, Math.sign(event.deltaY)));
@@ -130,13 +138,15 @@ if (frames.length > 1 && main) {
   document.addEventListener('touchstart', event => {
     touch = undefined;
     if (event.touches.length !== 1) { cancel(); return; }
-    if (!available() || excluded(event.target)) return;
+    if (zoomed() || excluded(event.target)) return;
     const point = event.touches[0];
-    touch = { x: point.clientX, y: point.clientY, axis: null, consumed: Boolean(destination), native: false };
+    // A background gesture begun while the menu closes must stay consumed after unlock.
+    touch = { x: point.clientX, y: point.clientY, axis: null, consumed: Boolean(destination) || main.inert, native: false };
   }, { passive: true });
   document.addEventListener('touchmove', event => {
-    if (!touch || !available()) return;
+    if (!touch || zoomed()) return;
     if (event.touches.length !== 1) { touch = undefined; cancel(); return; }
+    if (main.inert) touch.consumed = true;
     const dx = touch.x - event.touches[0].clientX;
     const dy = touch.y - event.touches[0].clientY;
     if (!touch.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 8) {
@@ -154,9 +164,9 @@ if (frames.length > 1 && main) {
   document.addEventListener('touchcancel', () => { touch = undefined; }, { passive: true });
 
   // Native links, focus navigation and history always take priority over a gesture.
-  document.addEventListener('click', cancel, { capture: true });
-  document.addEventListener('keydown', cancel);
-  document.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') cancel(); });
+  document.addEventListener('click', interrupt, { capture: true });
+  document.addEventListener('keydown', interrupt);
+  document.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') interrupt(event); });
   window.addEventListener('hashchange', cancel);
   window.addEventListener('popstate', cancel);
   window.addEventListener('pagehide', cancel);
