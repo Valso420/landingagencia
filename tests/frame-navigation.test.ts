@@ -110,6 +110,28 @@ test('native home sections keep entry and exit native while neighboring destinat
   }
 });
 
+test('partial short destination frames at native boundaries do not capture reverse scrolling', () => {
+  const viewport = 750;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true },
+    { top: 750, height: viewport, nativeScroll: true },
+    { top: 1_500, height: viewport },
+    { top: 2_250, height: viewport },
+    { top: 3_000, height: viewport },
+    { top: 3_750, height: viewport, nativeScroll: true },
+  ];
+  for (const index of [2, 4]) {
+    for (const offset of [120, 200, 400]) {
+      const position = frames[index].top + offset;
+      assert.deepEqual(nextFrameStop(frames, position, viewport, -1), { index, offset: 0 });
+      assert.equal(canControlFrameGesture(frames, position, viewport, -1), false, `${index}, ${offset}`);
+    }
+  }
+  assert.equal(canControlFrameGesture(frames, 1_500, viewport, 1), true);
+  assert.equal(canControlFrameGesture(frames, 3_000, viewport, -1), true);
+  assert.equal(canControlFrameGesture(frames, 2_370, viewport, -1), true, 'An interior destination keeps its alignment behavior.');
+});
+
 test('unmarked pages retain boundary consumption and empty pages remain native', () => {
   const frames: FrameBounds[] = [{ top: 0, height: 800 }, { top: 800, height: 800 }];
   assert.equal(canControlFrameGesture(frames, 0, 800, -1), true);
@@ -130,6 +152,9 @@ test('tall controlled frames preserve interior reading before a native boundary'
   assert.equal(canControlFrameGesture(frames, 1_800, viewport, 1), false);
   assert.equal(canControlFrameGesture(frames, 1_800, viewport, -1), true);
   assert.equal(canControlFrameGesture(frames, 800, viewport, -1), false);
+  assert.equal(canControlFrameGesture(frames, 920, viewport, -1), true, 'A tall boundary frame still allows reading its first portion.');
+  assert.equal(canControlFrameGesture(frames, 2_000, viewport, -1), true);
+  assert.deepEqual(nextFrameStop(frames, 2_000, viewport, -1), { index: 1, offset: 520 });
   frames[1].nativeScroll = true;
   assert.equal(canControlFrameGesture(frames, 1_480, viewport, 1), false);
 });

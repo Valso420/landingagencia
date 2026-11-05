@@ -30,8 +30,12 @@ export function canControlFrameGesture(frames: FrameBounds[], position: number, 
   for (let i = 0; i < frames.length; i++) {
     if (frames[i].top <= position + 2) index = i;
   }
-  if (frames[index].nativeScroll) return false;
+  const frame = frames[index];
+  if (frame.nativeScroll) return false;
   const stop = nextFrameStop(frames, position, viewport, direction);
+  // Partial screens at native boundaries should not be pulled back into alignment.
+  if (stop?.index === index && frame.height <= viewport + 2 && position > frame.top + 2
+    && (frames[index - 1]?.nativeScroll || frames[index + 1]?.nativeScroll)) return false;
   return !stop || !frames[stop.index].nativeScroll;
 }
 

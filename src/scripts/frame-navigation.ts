@@ -110,7 +110,10 @@ if (frames.length > 1 && main) {
     let sourceIndex = 0;
     bounds.forEach((frame, index) => { if (frame.top <= origin + 2) sourceIndex = index; });
     const source = frames[sourceIndex];
-    if (source !== frames[stop.index] && !source.matches('.hero-section') && !frames[stop.index].matches('.hero-section') && !reducedMotion.matches) {
+    const sourceBounds = bounds[sourceIndex];
+    const coversViewport = sourceBounds.top <= origin + 2 && sourceBounds.top + sourceBounds.height >= origin + innerHeight - 2;
+    // A partial outgoing frame cannot cover the viewport during a crossfade.
+    if (coversViewport && source !== frames[stop.index] && !source.matches('.hero-section') && !frames[stop.index].matches('.hero-section') && !reducedMotion.matches) {
       void blurTo(source, stop);
       return;
     }
@@ -176,7 +179,11 @@ if (frames.length > 1 && main) {
   window.addEventListener('hashchange', cancel);
   window.addEventListener('popstate', cancel);
   window.addEventListener('pagehide', cancel);
-  window.addEventListener('resize', () => { if (root.classList.contains('is-frame-blurring')) cancel(); });
+  window.addEventListener('resize', () => {
+    if (!destination) return;
+    window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
+    cancel();
+  });
   reducedMotion.addEventListener('change', () => {
     if (destination) window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
     cancel();
