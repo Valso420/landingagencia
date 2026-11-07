@@ -132,6 +132,84 @@ test('partial short destination frames at native boundaries do not capture rever
   assert.equal(canControlFrameGesture(frames, 2_370, viewport, -1), true, 'An interior destination keeps its alignment behavior.');
 });
 
+test('a marked native section enables its controlled exit only at the bottom edge', () => {
+  const viewport = 800;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true },
+    { top: 800, height: viewport, nativeScroll: true, stopAfter: true },
+    { top: 1_600, height: viewport },
+  ];
+  for (const position of [0, 400, 797]) {
+    assert.equal(canControlFrameGesture(frames, position, viewport, 1), false);
+  }
+  for (const position of [798, 800]) {
+    assert.equal(canControlFrameGesture(frames, position, viewport, 1), true);
+    assert.deepEqual(nextFrameStop(frames, position, viewport, 1), { index: 2, offset: 0 });
+  }
+  assert.equal(canControlFrameGesture(frames, 800, viewport, -1), false);
+  assert.equal(canControlFrameGesture(frames, 800, viewport, 0), false);
+});
+
+test('a tall marked native section remains readable before its controlled exit', () => {
+  const viewport = 800;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true },
+    { top: 800, height: 1_800, nativeScroll: true, stopAfter: true },
+    { top: 2_600, height: viewport },
+  ];
+  for (const position of [800, 1_200, 1_797]) {
+    assert.equal(canControlFrameGesture(frames, position, viewport, 1), false);
+    assert.equal(canControlFrameGesture(frames, position, viewport, -1), false);
+  }
+  assert.equal(canControlFrameGesture(frames, 1_798, viewport, 1), true);
+  assert.equal(canControlFrameGesture(frames, 1_800, viewport, 1), true);
+  assert.deepEqual(nextFrameStop(frames, 1_800, viewport, 1), { index: 2, offset: 0 });
+});
+
+test('returning from a controlled frame to a marked native section stays controlled', () => {
+  const viewport = 800;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true, stopAfter: true },
+    { top: 800, height: viewport },
+    { top: 1_600, height: viewport },
+  ];
+  assert.equal(canControlFrameGesture(frames, 800, viewport, -1), true);
+  assert.deepEqual(nextFrameStop(frames, 800, viewport, -1), { index: 0, offset: 'end' });
+  for (const position of [920, 1_200]) {
+    assert.equal(canControlFrameGesture(frames, position, viewport, -1), true);
+    assert.deepEqual(nextFrameStop(frames, position, viewport, -1), { index: 1, offset: 0 });
+  }
+});
+
+test('a native stop does not enable an exit without a following controlled frame', () => {
+  const viewport = 800;
+  const frame: FrameBounds = { top: 0, height: viewport, nativeScroll: true, stopAfter: true };
+  assert.equal(canControlFrameGesture([frame], 0, viewport, 1), false);
+  assert.equal(canControlFrameGesture([frame, { top: 800, height: viewport, nativeScroll: true }], 0, viewport, 1), false);
+});
+
+test('native wheel momentum reaching a marked stop waits for a new gesture', () => {
+  const viewport = 800;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true },
+    { top: 800, height: viewport, nativeScroll: true, stopAfter: true },
+    { top: 1_600, height: viewport },
+  ];
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(50, 0, false, true, canControlFrameGesture(frames, 600, viewport, 1)), {
+    managed: false, direction: 0,
+  });
+  const allowExit = canControlFrameGesture(frames, 800, viewport, 1);
+  assert.equal(allowExit, true);
+  for (const time of [100, 200, 300]) {
+    assert.deepEqual(gesture.update(50, time, false, true, allowExit), { managed: false, direction: 0 });
+  }
+  assert.deepEqual(gesture.update(50, 600, false, true, allowExit), { managed: true, direction: 1 });
+  for (let time = 700; time <= 1_800; time += 100) {
+    assert.deepEqual(gesture.update(50, time, time < 1_400, true, true), { managed: true, direction: 0 });
+  }
+});
+
 test('unmarked pages retain boundary consumption and empty pages remain native', () => {
   const frames: FrameBounds[] = [{ top: 0, height: 800 }, { top: 800, height: 800 }];
   assert.equal(canControlFrameGesture(frames, 0, 800, -1), true);

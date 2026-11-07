@@ -1,4 +1,4 @@
-export interface FrameBounds { top: number; height: number; nativeScroll?: boolean }
+export interface FrameBounds { top: number; height: number; nativeScroll?: boolean; stopAfter?: boolean }
 export interface FrameStop { index: number; offset: number | 'end' }
 
 export function isViewportZoomed(scale: number): boolean {
@@ -31,12 +31,16 @@ export function canControlFrameGesture(frames: FrameBounds[], position: number, 
     if (frames[i].top <= position + 2) index = i;
   }
   const frame = frames[index];
-  if (frame.nativeScroll) return false;
+  if (frame.nativeScroll) {
+    const end = frame.top + Math.max(0, frame.height - viewport);
+    return frame.stopAfter === true && direction > 0 && position >= end - 2
+      && index < frames.length - 1 && !frames[index + 1].nativeScroll;
+  }
   const stop = nextFrameStop(frames, position, viewport, direction);
   // Partial screens at native boundaries should not be pulled back into alignment.
   if (stop?.index === index && frame.height <= viewport + 2 && position > frame.top + 2
-    && (frames[index - 1]?.nativeScroll || frames[index + 1]?.nativeScroll)) return false;
-  return !stop || !frames[stop.index].nativeScroll;
+    && [frames[index - 1], frames[index + 1]].some(neighbor => neighbor?.nativeScroll && !neighbor.stopAfter)) return false;
+  return !stop || !frames[stop.index].nativeScroll || frames[stop.index].stopAfter === true;
 }
 
 // Trackpad momentum belongs to the same gesture until the wheel goes quiet.

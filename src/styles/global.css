@@ -45,6 +45,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   outline-offset: 5px;
 }
 main:focus { outline: none; }
+main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: clip; }
 [hidden] { display: none!important; }
 .sr-only {
   position: absolute;

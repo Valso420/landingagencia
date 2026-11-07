@@ -7,6 +7,8 @@ if (frames.length > 1 && main) {
   const root = document.documentElement;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const wheel = new WheelGesture();
+  const nativeBoundary = frames.find(frame => frame.hasAttribute('data-frame-stop'));
+  let boundaryEnabled = false;
   let animation = 0;
   let destination: FrameStop | undefined;
   let revision = 0;
@@ -18,8 +20,28 @@ if (frames.length > 1 && main) {
   const excluded = (target: EventTarget | null) => target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable], .main-menu, .phase-tools'));
   const frameBounds = () => frames.map(frame => {
     const rect = frame.getBoundingClientRect();
-    return { top: rect.top + scrollY, height: rect.height, nativeScroll: frame.dataset.frameScroll === 'native' };
+    return { top: rect.top + scrollY, height: rect.height, nativeScroll: frame.dataset.frameScroll === 'native', stopAfter: frame.hasAttribute('data-frame-stop') };
   });
+  const releaseBoundary = () => {
+    boundaryEnabled = false;
+    main.classList.remove('native-scroll-bounded');
+    main.style.removeProperty('--native-scroll-end');
+  };
+  const boundNativeScroll = () => {
+    if (!nativeBoundary || destination || zoomed()) return;
+    const bottom = nativeBoundary.getBoundingClientRect().bottom;
+    if (!boundaryEnabled && scrollY > Math.max(nativeBoundary.getBoundingClientRect().top + scrollY, bottom + scrollY - innerHeight) + 2) return;
+    // Clip overflow without creating a nested scroller: native touch inertia stops here.
+    main.style.setProperty('--native-scroll-end', `${bottom - main.getBoundingClientRect().top}px`);
+    main.classList.add('native-scroll-bounded');
+    boundaryEnabled = true;
+  };
+  const beyondBoundary = (target: Element | null) => Boolean(nativeBoundary && target
+    && target.getBoundingClientRect().top >= nativeBoundary.getBoundingClientRect().bottom - 2);
+  const fragmentTarget = () => {
+    const region = new URLSearchParams(location.search).get('region');
+    return document.getElementById(location.hash.slice(1) || (region ? `region-${region}` : 'inicio'));
+  };
   const canScrollInside = (target: EventTarget | null, direction: number) => {
     let element = target instanceof Element ? target : null;
     while (element && element !== main && element !== root) {
@@ -53,6 +75,9 @@ if (frames.length > 1 && main) {
     // Settle the selected frame before the menu captures its background and locks scroll.
     if (opensMenu && destination) window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
     cancel();
+    boundNativeScroll();
+    // Native anchor navigation must see the full document before its default scroll.
+    if (event.type === 'click' && event.target instanceof Element && event.target.closest('a[href]')) releaseBoundary();
   };
   const reveal = (stop: FrameStop) => {
     window.scrollTo({ top: targetPosition(stop), behavior: 'instant' });
@@ -93,7 +118,7 @@ if (frames.length > 1 && main) {
     } catch {
       if (active()) reveal(stop);
     } finally {
-      if (currentRevision === revision) cancel();
+      if (currentRevision === revision) { cancel(); boundNativeScroll(); }
     }
   };
   const advance = (direction: number) => {
@@ -102,6 +127,7 @@ if (frames.length > 1 && main) {
     if (!canControlFrameGesture(bounds, scrollY, innerHeight, direction)) return;
     const stop = nextFrameStop(bounds, scrollY, innerHeight, direction);
     if (!stop) return;
+    releaseBoundary();
     const origin = scrollY;
     const start = performance.now();
     destination = stop;
@@ -123,15 +149,16 @@ if (frames.length > 1 && main) {
       const eased = progress < .5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
       window.scrollTo({ top: origin + (targetPosition(stop) - origin) * eased, behavior: 'instant' });
       if (progress < 1) animation = requestAnimationFrame(tick);
-      else cancel();
+      else { cancel(); boundNativeScroll(); }
     };
     animation = requestAnimationFrame(tick);
   };
 
   document.addEventListener('wheel', event => {
-    if (event.ctrlKey || event.metaKey || zoomed()) { cancel(); return; }
+    if (event.ctrlKey || event.metaKey || zoomed()) { cancel(); releaseBoundary(); return; }
     if (main.inert) { wheel.consume(performance.now()); return; }
     if (excluded(event.target)) return;
+    if (!boundaryEnabled) boundNativeScroll();
     const vertical = !event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX);
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;
     const direction = Math.sign(event.deltaY);
@@ -145,15 +172,16 @@ if (frames.length > 1 && main) {
 
   document.addEventListener('touchstart', event => {
     touch = undefined;
-    if (event.touches.length !== 1) { cancel(); return; }
+    if (event.touches.length !== 1) { cancel(); releaseBoundary(); return; }
     if (zoomed() || excluded(event.target)) return;
+    if (!boundaryEnabled) boundNativeScroll();
     const point = event.touches[0];
     // A background gesture begun while the menu closes must stay consumed after unlock.
     touch = { x: point.clientX, y: point.clientY, position: scrollY, axis: null, consumed: Boolean(destination) || main.inert, native: false };
   }, { passive: true });
   document.addEventListener('touchmove', event => {
     if (!touch || zoomed()) return;
-    if (event.touches.length !== 1) { touch = undefined; cancel(); return; }
+    if (event.touches.length !== 1) { touch = undefined; cancel(); releaseBoundary(); return; }
     if (main.inert) touch.consumed = true;
     const dx = touch.x - event.touches[0].clientX;
     const dy = touch.y - event.touches[0].clientY;
@@ -169,23 +197,76 @@ if (frames.length > 1 && main) {
       advance(Math.sign(dy));
     }
   }, { passive: false });
-  document.addEventListener('touchend', () => { touch = undefined; }, { passive: true });
-  document.addEventListener('touchcancel', () => { touch = undefined; }, { passive: true });
+  const endTouch = (event: TouchEvent) => {
+    touch = undefined;
+    if (!event.touches.length) boundNativeScroll();
+  };
+  document.addEventListener('touchend', endTouch, { passive: true });
+  document.addEventListener('touchcancel', endTouch, { passive: true });
 
   // Native links, focus navigation and history always take priority over a gesture.
   document.addEventListener('click', interrupt, { capture: true });
-  document.addEventListener('keydown', interrupt);
+  document.addEventListener('keydown', event => {
+    const direction = event.key === 'ArrowDown' || event.key === 'PageDown' ? 1
+      : event.key === 'ArrowUp' || event.key === 'PageUp' ? -1
+      : event.key === ' ' && !(event.target instanceof Element && event.target.closest('a, button')) ? event.shiftKey ? -1 : 1 : 0;
+    if (nativeBoundary && direction && available() && !excluded(event.target) && !event.ctrlKey && !event.metaKey && !event.altKey
+      && (destination || canControlFrameGesture(frameBounds(), scrollY, innerHeight, direction))) {
+      event.preventDefault();
+      if (!event.repeat) advance(direction);
+      return;
+    }
+    interrupt(event);
+    if (event.key === 'Tab' || event.key === 'Home' || event.key === 'End') releaseBoundary();
+  });
+  document.addEventListener('focusin', event => {
+    if (!(event.target instanceof Element)) return;
+    if (beyondBoundary(event.target)) {
+      const wasBounded = boundaryEnabled;
+      releaseBoundary();
+      if (wasBounded) event.target.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    } else boundNativeScroll();
+  });
   document.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') interrupt(event); });
-  window.addEventListener('hashchange', cancel);
-  window.addEventListener('popstate', cancel);
-  window.addEventListener('pagehide', cancel);
-  window.addEventListener('resize', () => {
-    if (!destination) return;
-    window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
+  const restoreNavigation = () => {
     cancel();
+    releaseBoundary();
+    requestAnimationFrame(() => {
+      const target = fragmentTarget();
+      if (beyondBoundary(target)) target?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      else boundNativeScroll();
+    });
+  };
+  window.addEventListener('hashchange', restoreNavigation);
+  window.addEventListener('popstate', restoreNavigation);
+  window.addEventListener('pagehide', () => { cancel(); releaseBoundary(); });
+  window.addEventListener('pageshow', event => requestAnimationFrame(() => {
+    if (event.persisted || restoringHistory || !beyondBoundary(fragmentTarget())) boundNativeScroll();
+  }));
+  let boundaryTimer = 0;
+  window.addEventListener('scroll', () => {
+    clearTimeout(boundaryTimer);
+    // Let native Home/anchor scrolling finish before changing the document range.
+    if (nativeBoundary && !boundaryEnabled && !destination) boundaryTimer = window.setTimeout(boundNativeScroll, 160);
+  }, { passive: true });
+  window.addEventListener('resize', () => {
+    const wasTransitioning = Boolean(destination);
+    if (destination) {
+      window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
+      cancel();
+    }
+    if (boundaryEnabled || wasTransitioning) boundNativeScroll();
+  });
+  window.visualViewport?.addEventListener('resize', () => {
+    if (zoomed()) { cancel(); releaseBoundary(); }
+    else boundNativeScroll();
   });
   reducedMotion.addEventListener('change', () => {
     if (destination) window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
     cancel();
+    boundNativeScroll();
   });
+  const restoringHistory = (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'back_forward';
+  if (!restoringHistory && !beyondBoundary(fragmentTarget())) boundNativeScroll();
+  document.fonts.ready.then(() => { if (boundaryEnabled) boundNativeScroll(); });
 }
