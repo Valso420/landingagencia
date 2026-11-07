@@ -1,6 +1,6 @@
 # Travel agency landing
 
-Mobile-first Argentine virtual travel agency website. Built with Astro 7.4.5, TypeScript and native CSS. Astro generates static HTML; browser JavaScript handles the menu, regional return links, contact destination context and solar lighting. Region carousels use native scrolling.
+Mobile-first Argentine virtual travel agency website. Built with Astro 7.4.5, TypeScript and native CSS. Astro generates static HTML; browser JavaScript handles the menu, destination card changes, regional return links, contact destination context and solar lighting. Horizontal gestures replace destination cards in a stationary slot.
 
 ## Run locally
 
@@ -39,7 +39,7 @@ The LAN commands listen on `0.0.0.0`. Connect both devices to the same trusted n
 | `/` | Window hero, agency section and destination explorer |
 | `/#agencia` | Agency introduction |
 | `/agencia/` | Agency presentation and pending team information |
-| `/destinos/` | Three regions with horizontal destination carousels |
+| `/destinos/` | Three regions with destination cards that change in place |
 | `/?region=asia#destinos` | Asia: Japan, Thailand, Vietnam and Indonesia |
 | `/?region=europa#destinos` | Europe, Portugal and Italy |
 | `/?region=america#destinos` | America, Peru and Mexico |

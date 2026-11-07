@@ -28,10 +28,19 @@ if (frames.length > 1 && main) {
     const rect = frame.getBoundingClientRect();
     return { top: rect.top + scrollY, height: rect.height, nativeScroll: frame.dataset.frameScroll === 'native', stopAfter: frame.hasAttribute('data-frame-stop') };
   });
+  const updateTouchAction = () => {
+    const bounds = frameBounds();
+    // Touch permissions must be set before a gesture starts, including at native boundaries.
+    const up = !canControlFrameGesture(bounds, scrollY, innerHeight, -1);
+    const down = !canControlFrameGesture(bounds, scrollY, innerHeight, 1);
+    const vertical = up && down ? 'pan-y' : up ? 'pan-up' : down ? 'pan-down' : '';
+    root.style.setProperty('--frame-touch-action', `pan-x ${vertical} pinch-zoom`);
+  };
   const select = (stop?: FrameStop) => {
     if (stop) nativeNavigation = false;
     selected = stop && frames[stop.index].dataset.frameScroll !== 'native' ? stop : undefined;
     root.classList.toggle('is-frame-controlled', Boolean(selected));
+    updateTouchAction();
   };
   const rememberPosition = () => {
     if (destination || main.inert || zoomed() || nativeNavigation) return;
@@ -71,7 +80,7 @@ if (frames.length > 1 && main) {
     return false;
   };
   const horizontalScroller = (target: EventTarget | null) => target instanceof Element
-    ? target.closest<HTMLElement>('.destination-cards') : null;
+    ? target.closest('.destination-deck')?.querySelector<HTMLElement>('.destination-cards') : null;
   const targetPosition = (stop: FrameStop) => {
     const bounds = frames[stop.index].getBoundingClientRect();
     const end = Math.max(0, bounds.height - innerHeight);
@@ -200,6 +209,7 @@ if (frames.length > 1 && main) {
   document.addEventListener('wheel', event => {
     if (event.ctrlKey || event.metaKey || zoomed()) { cancel(); select(); releaseBoundary(); return; }
     if (main.inert) { wheel.consume(performance.now()); return; }
+    if (event.defaultPrevented) { wheel.consume(performance.now()); return; }
     if (excluded(event.target)) return;
     if (nativeNavigation || !selected) { nativeNavigation = false; rememberPosition(); }
     if (!boundaryEnabled) boundNativeScroll();
@@ -213,13 +223,16 @@ if (frames.length > 1 && main) {
     const allowFrame = canControlFrameGesture(frameBounds(), scrollY, innerHeight, direction);
     const contain = !nested && Boolean(selected || destination);
     const gesture = wheel.update(dy * unit, performance.now(), Boolean(destination), eligible, allowFrame, contain);
-    if (!gesture.managed) return;
+    if (!gesture.managed) {
+      if (eligible) select();
+      return;
+    }
     if (!vertical) {
-      // Cancel diagonal Y without losing horizontal carousel movement.
+      // Keep native fallback lists usable without moving an enhanced card slot.
       if (dy && event.cancelable) {
         event.preventDefault();
         const scroller = horizontalScroller(event.target);
-        if (scroller) scroller.scrollLeft += dx * unit;
+        if (scroller && !scroller.closest('.destination-deck.is-enhanced')) scroller.scrollLeft += dx * unit;
       }
       return;
     }
@@ -251,7 +264,8 @@ if (frames.length > 1 && main) {
       if (touch.axis) touch.native = canScrollInside(event.target, Math.sign(dy))
         || (!touch.consumed && !canControlFrameGesture(frameBounds(), touch.position, innerHeight, Math.sign(dy)));
     }
-    if (touch.axis !== 'y' || touch.native) return;
+    if (touch.axis !== 'y') return;
+    if (touch.native) { select(); return; }
     // CSS can already prevent native panning, making the event non-cancelable.
     if (event.cancelable) event.preventDefault();
     if (!touch.consumed && Math.abs(dy) >= 40) {
@@ -348,6 +362,7 @@ if (frames.length > 1 && main) {
   }));
   window.addEventListener('scroll', () => {
     clearTimeout(boundaryTimer);
+    updateTouchAction();
     if (destination || main.inert || zoomed() || resizeFrame) return;
     // Recover a controlled stop after external scrolling; native Home/anchors may finish first.
     boundaryTimer = window.setTimeout(() => {
@@ -367,6 +382,7 @@ if (frames.length > 1 && main) {
       if (destination) cancel();
       if (stop) reveal(stop);
       if (boundaryEnabled || stop) boundNativeScroll();
+      updateTouchAction();
     });
   };
   window.addEventListener('resize', resize);
@@ -391,6 +407,7 @@ if (frames.length > 1 && main) {
   });
   const restoringHistory = (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'back_forward';
   if (!restoringHistory && !beyondBoundary(fragmentTarget())) boundNativeScroll();
+  updateTouchAction();
   const layoutObserver = new ResizeObserver(() => {
     if (boundaryEnabled || selected || destination) resize();
   });

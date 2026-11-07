@@ -7,7 +7,7 @@ import { agency } from '../config/agency';
 ---
 <BaseLayout title={`La agencia · ${agency.name}`}>
   <article class="agency-page">
-    <section class="agency-frame screen-frame" aria-labelledby="agency-title" data-header-theme="dark">
+    <section class="agency-frame screen-frame" aria-labelledby="agency-title" data-header-theme="dark" data-frame-scroll="native">
       <div class="agency-content agency-intro-content">
         <h1 id="agency-title">Quiénes<br />somos</h1>
         <Image class="agency-planning" src={planning} alt="Mapa y cámara fotográfica preparados para planificar un viaje" widths={[400, 700, 1100]} sizes="(min-width: 900px) 520px, calc(100vw - 48px)" format="webp" loading="eager" />
@@ -17,7 +17,7 @@ import { agency } from '../config/agency';
         </div>
       </div>
     </section>
-    <section class="agency-frame screen-frame" aria-labelledby="agency-approach-title" data-header-theme="dark">
+    <section class="agency-frame screen-frame" aria-labelledby="agency-approach-title" data-header-theme="dark" data-frame-scroll="native">
       <div class="agency-content agency-approach-content">
         <Image class="agency-landscape" src={cinqueTerre} alt="Pueblo de Manarola, en Cinque Terre, junto al mar" widths={[400, 700, 1000]} sizes="(min-width: 900px) 520px, calc(100vw - 48px)" format="webp" loading="lazy" />
         <div class="agency-approach">
@@ -26,7 +26,7 @@ import { agency } from '../config/agency';
         </div>
       </div>
     </section>
-    <section class="agency-frame screen-frame" aria-labelledby="agency-team-title" data-header-theme="dark">
+    <section class="agency-frame screen-frame" aria-labelledby="agency-team-title" data-header-theme="dark" data-frame-scroll="native">
       <div class="agency-content agency-team-content">
         <h2 id="agency-team-title">Detrás de la agencia</h2>
         <p class="agency-pending">{agency.history}</p>

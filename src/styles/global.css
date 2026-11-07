@@ -33,7 +33,7 @@ body { margin: 0; }
   scroll-snap-stop: always;
 }
 html:not(.is-frame-zoomed) .frame-managed,
-html.is-frame-controlled:not(.is-frame-zoomed) .site-header:not(.is-open),
+html.is-frame-controlled:not(.is-frame-zoomed) .site-header:not(.is-open) { touch-action: var(--frame-touch-action, pan-x pinch-zoom); }
 html.is-frame-transitioning:not(.is-frame-zoomed) main { touch-action: pan-x pinch-zoom; }
 .is-frame-blurring .screen-frame.frame-incoming { z-index: 3; }
 .is-frame-blurring .hero-section.frame-incoming { overflow: clip; }
