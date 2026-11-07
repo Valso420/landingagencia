@@ -163,7 +163,8 @@ main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: cli
 .site-header:not(.menu-enhanced) ~ main .window-scene,
 .site-header:not(.menu-enhanced) ~ main .hero-contrast { position: absolute; }
 
-.hero-section { background: var(--night); z-index: 0; clip-path: inset(0); }
+/* Keep the CTA and next section stable when mobile browser controls change. */
+.hero-section { --screen-height: var(--window-scene-height); background: var(--night); z-index: 0; clip-path: inset(0); }
 [data-window-scene] { --scene-night: 0; --scene-warm: 0; --scene-dawn: 0; }
 .window-hero {
   position: relative;
