@@ -9,6 +9,8 @@
   --line: #dad7d0;
   --gray: #b7b5af;
   --screen-height: 100svh;
+  /* Keep the scene stable while mobile browser controls expand or collapse. */
+  --window-scene-height: 100svh;
   --header-height: calc(76px + env(safe-area-inset-top, 0px));
   --screen-cta-inset: max(24px, env(safe-area-inset-bottom, 0px));
   --screen-cta-max-width: 420px;
@@ -148,7 +150,7 @@ main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: cli
 .menu-enhanced .main-menu { position: fixed; inset: 0; isolation: isolate; overflow-y: auto; overscroll-behavior: contain; padding: 0 max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px)); }
 .menu-enhanced .menu-backdrop { display: block; position: fixed; inset: 0; z-index: -1; overflow: hidden; opacity: .22; pointer-events: none; }
 .menu-photo { position: absolute; max-width: none; }
-.menu-window { position: absolute; width: min(124.1vw, calc(var(--screen-height) * .64), 660px); aspect-ratio: 2/3; left: 50%; top: calc(var(--screen-height) * .46); transform: translate(-50%, -50%); mask-image: linear-gradient(transparent, #000 4%, #000 93%, transparent); }
+.menu-window { position: absolute; width: min(124.1vw, calc(var(--window-scene-height) * .64), 660px); aspect-ratio: 2/3; left: 50%; top: calc(var(--window-scene-height) * .46); transform: translate(-50%, -50%); mask-image: linear-gradient(transparent, #000 4%, #000 93%, transparent); }
 .menu-enhanced .menu-inner { min-height: var(--screen-height); display: grid; grid-template-rows: minmax(min-content, 1fr) auto minmax(min-content, 1fr); gap: 24px; max-width: var(--screen-cta-max-width); padding: max(clamp(24px, 4.62dvh, 39px), env(safe-area-inset-top, 0px)) 0 var(--screen-cta-inset); }
 .menu-enhanced .menu-brand { align-self: start; margin-top: calc(var(--header-height) - 33px); }
 .menu-enhanced .menu-social { align-self: end; }
@@ -174,10 +176,10 @@ main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: cli
 }
 .window-scene {
   position: fixed;
-  width: min(124.1%, calc(var(--screen-height) * .64), 660px);
+  width: min(124.1%, calc(var(--window-scene-height) * .64), 660px);
   aspect-ratio: 2/3;
   left: 50%;
-  top: calc(var(--screen-height) * .46);
+  top: calc(var(--window-scene-height) * .46);
   transform: translate(-50%, -50%);
   opacity: .5;
 }
@@ -192,15 +194,21 @@ main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: cli
 .window-light--night { background: #02132d; opacity: calc(var(--scene-night)*.92); }
 .window-light--warm { background: linear-gradient(#dd7d35,#ffb14f 60%,#c46b3c); mix-blend-mode: color; opacity: calc(var(--scene-warm)*.78); }
 .window-light--dawn { background: linear-gradient(#e8a78b,#ffd6a0); mix-blend-mode: soft-light; opacity: calc(var(--scene-dawn)*.9); }
-.hero-contrast { position: fixed; inset: 0 0 auto; height: var(--screen-height); background: linear-gradient(180deg,rgba(0,0,0,.74),transparent 27%,transparent 68%,rgba(0,0,0,.74)); pointer-events: none; }
+.hero-contrast {
+  position: fixed;
+  inset: 0 0 auto;
+  height: var(--screen-height);
+  background: linear-gradient(180deg, rgba(0,0,0,.74) 0, transparent calc(var(--window-scene-height) * .27), transparent calc(var(--window-scene-height) * .68), rgba(0,0,0,.74) var(--window-scene-height));
+  pointer-events: none;
+}
 .window-hero h1 {
   position: absolute;
   z-index: 1;
-  top: calc(var(--screen-height) * .4);
+  top: calc(var(--window-scene-height) * .4);
   left: 50%;
   transform: translateX(-50%);
   width: min(70%, 320px);
-  font-size: clamp(28px, min(11.496vw, 6dvh), 55px);
+  font-size: clamp(28px, min(11.496vw, calc(var(--window-scene-height) * .06)), 55px);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -.04em;
