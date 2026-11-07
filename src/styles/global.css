@@ -31,6 +31,7 @@ body { margin: 0; }
   scroll-snap-stop: always;
 }
 .is-frame-blurring .screen-frame.frame-incoming { z-index: 3; }
+.is-frame-blurring .hero-section.frame-incoming { overflow: clip; }
 .is-frame-blurring .screen-frame.frame-outgoing { z-index: 4; }
 h1,h2,h3,p { margin: 0; }
 h1,h2,h3 { font-family: 'Montserrat', sans-serif; }

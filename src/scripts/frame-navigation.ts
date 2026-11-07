@@ -83,7 +83,7 @@ if (frames.length > 1 && main) {
     window.scrollTo({ top: targetPosition(stop), behavior: 'instant' });
     window.dispatchEvent(new Event('framechange'));
   };
-  const blurTo = async (source: HTMLElement, stop: FrameStop) => {
+  const blurTo = async (source: HTMLElement, stop: FrameStop, onComplete?: () => void) => {
     const currentRevision = revision;
     const target = frames[stop.index];
     const active = () => currentRevision === revision && available();
@@ -102,13 +102,18 @@ if (frames.length > 1 && main) {
       if (!active()) return;
       // Keep the outgoing frame visually still while the document moves to its target.
       const shift = targetPosition(stop) - scrollY;
-      source.classList.add('frame-outgoing');
+      const outgoing = frames.filter(frame => {
+        if (frame === target) return false;
+        const bounds = frame.getBoundingClientRect();
+        return frame === source || (bounds.bottom > 0 && bounds.top < innerHeight);
+      });
+      outgoing.forEach(frame => frame.classList.add('frame-outgoing'));
       target.classList.add('frame-incoming');
       const timing: KeyframeAnimationOptions = { duration: 800, easing: 'ease-in-out', fill: 'both' };
-      effects.push(source.animate([
+      effects.push(...outgoing.map(frame => frame.animate([
         { opacity: 1, filter: 'blur(0px)', transform: `translateY(${shift}px)` },
         { opacity: 0, filter: 'blur(12px)', transform: `translateY(${shift}px)` },
-      ], timing));
+      ], timing)));
       effects.push(target.animate([
         { opacity: 0, filter: 'blur(12px)' },
         { opacity: 1, filter: 'blur(0px)' },
@@ -118,7 +123,12 @@ if (frames.length > 1 && main) {
     } catch {
       if (active()) reveal(stop);
     } finally {
-      if (currentRevision === revision) { cancel(); boundNativeScroll(); }
+      if (currentRevision === revision) {
+        const completed = active();
+        cancel();
+        boundNativeScroll();
+        if (completed) onComplete?.();
+      }
     }
   };
   const advance = (direction: number) => {
@@ -204,8 +214,32 @@ if (frames.length > 1 && main) {
   document.addEventListener('touchend', endTouch, { passive: true });
   document.addEventListener('touchcancel', endTouch, { passive: true });
 
-  // Native links, focus navigation and history always take priority over a gesture.
-  document.addEventListener('click', interrupt, { capture: true });
+  // Explicit frame links reuse the crossfade without scrolling through intervening screens.
+  document.addEventListener('click', event => {
+    interrupt(event);
+    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !available()) return;
+    const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[data-frame-link]') : null;
+    if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+    const url = new URL(link.href);
+    if (url.origin !== location.origin || url.pathname !== location.pathname || url.search !== location.search) return;
+    const index = frames.findIndex(frame => `#${frame.id}` === url.hash);
+    const source = link.closest<HTMLElement>('.screen-frame');
+    if (index < 0 || !source || source === frames[index]) return;
+    event.preventDefault();
+    if (url.href !== location.href) history.pushState(null, '', url);
+    const stop: FrameStop = { index, offset: 0 };
+    destination = stop;
+    root.classList.add('is-frame-transitioning');
+    wheel.consume(performance.now());
+    const focusContent = () => main.focus({ preventScroll: true });
+    if (reducedMotion.matches) {
+      reveal(stop);
+      cancel();
+      boundNativeScroll();
+      focusContent();
+    } else void blurTo(source, stop, focusContent);
+  }, { capture: true });
+  // Focus navigation and history always take priority over a gesture or frame link.
   document.addEventListener('keydown', event => {
     const direction = event.key === 'ArrowDown' || event.key === 'PageDown' ? 1
       : event.key === 'ArrowUp' || event.key === 'PageUp' ? -1
@@ -257,9 +291,13 @@ if (frames.length > 1 && main) {
     }
     if (boundaryEnabled || wasTransitioning) boundNativeScroll();
   });
+  let wasZoomed = zoomed();
   window.visualViewport?.addEventListener('resize', () => {
-    if (zoomed()) { cancel(); releaseBoundary(); }
-    else boundNativeScroll();
+    const isZoomed = zoomed();
+    if (isZoomed) { cancel(); releaseBoundary(); }
+    // Initial viewport sizing must not cap a pending direct fragment visit.
+    else if (boundaryEnabled || wasZoomed) boundNativeScroll();
+    wasZoomed = isZoomed;
   });
   reducedMotion.addEventListener('change', () => {
     if (destination) window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
