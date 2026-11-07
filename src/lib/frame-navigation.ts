@@ -57,15 +57,16 @@ export class WheelGesture {
     this.managed = true;
   }
 
-  update(delta: number, time: number, busy: boolean, eligible: boolean, allowFrame = true) {
+  update(delta: number, time: number, busy: boolean, eligible: boolean, allowFrame = true, contain = false) {
     if (time - this.lastEvent > 240) {
       this.amount = 0;
       this.consumed = busy;
-      this.managed = eligible && (busy || allowFrame);
+      this.managed = (eligible || contain) && (busy || allowFrame);
     }
     this.lastEvent = time;
     if (!eligible) this.consumed = true;
-    const managed = this.managed && eligible;
+    // A horizontal start in a controlled area must not release later vertical momentum.
+    const managed = this.managed && (eligible || contain);
     if (!managed || this.consumed) return { managed, direction: 0 };
     if (Math.sign(delta) !== Math.sign(this.amount)) this.amount = 0;
     this.amount += delta;

@@ -32,6 +32,9 @@ body { margin: 0; }
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
+html:not(.is-frame-zoomed) .frame-managed,
+html.is-frame-controlled:not(.is-frame-zoomed) .site-header:not(.is-open),
+html.is-frame-transitioning:not(.is-frame-zoomed) main { touch-action: pan-x pinch-zoom; }
 .is-frame-blurring .screen-frame.frame-incoming { z-index: 3; }
 .is-frame-blurring .hero-section.frame-incoming { overflow: clip; }
 .is-frame-blurring .screen-frame.frame-outgoing { z-index: 4; }
@@ -48,7 +51,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   outline-offset: 5px;
 }
 main:focus { outline: none; }
-main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: clip; }
+main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: clip; overflow-anchor: none; }
 [hidden] { display: none!important; }
 .sr-only {
   position: absolute;

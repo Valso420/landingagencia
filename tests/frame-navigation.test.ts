@@ -85,6 +85,65 @@ test('switching to horizontal scrolling releases the event without allowing anot
   assert.deepEqual(gesture.update(40, 200, true, true), { managed: true, direction: 0 });
 });
 
+test('a diagonal wheel start in a contained frame cannot become native vertical scrolling', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(20, 0, false, false, true, true), { managed: true, direction: 0 });
+  for (const time of [30, 100, 200, 300]) {
+    assert.deepEqual(gesture.update(200, time, false, true, true, true), { managed: true, direction: 0 });
+  }
+  assert.deepEqual(gesture.update(50, 600, false, true, true, true), { managed: true, direction: 1 });
+});
+
+test('pure horizontal wheel events in contained frames never request a frame advance', () => {
+  const gesture = new WheelGesture();
+  for (const time of [0, 100, 200, 500]) {
+    assert.deepEqual(gesture.update(0, time, false, false, true, true), { managed: true, direction: 0 });
+  }
+});
+
+test('a contained vertical gesture advances once through diagonal changes and momentum', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(40, 0, false, true, true, true), { managed: true, direction: 1 });
+  assert.deepEqual(gesture.update(20, 100, true, false, true, true), { managed: true, direction: 0 });
+  for (let time = 200; time <= 1_200; time += 100) {
+    assert.deepEqual(gesture.update(-50, time, time < 800, true, true, true), { managed: true, direction: 0 });
+  }
+  assert.deepEqual(gesture.update(-50, 1_500, false, true, true, true), { managed: true, direction: -1 });
+});
+
+test('containment does not capture a gesture that began in a native section', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(50, 0, false, true, false, false), { managed: false, direction: 0 });
+  assert.deepEqual(gesture.update(20, 100, false, false, true, true), { managed: false, direction: 0 });
+  assert.deepEqual(gesture.update(200, 200, false, true, true, true), { managed: false, direction: 0 });
+  assert.deepEqual(gesture.update(50, 500, false, true, true, true), { managed: true, direction: 1 });
+});
+
+test('a contained gesture begun during a transition remains consumed after it finishes', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(20, 0, true, false, true, true), { managed: true, direction: 0 });
+  for (let time = 100; time <= 1_000; time += 100) {
+    assert.deepEqual(gesture.update(50, time, time < 800, true, true, true), { managed: true, direction: 0 });
+  }
+  assert.deepEqual(gesture.update(50, 1_300, false, true, true, true), { managed: true, direction: 1 });
+});
+
+test('containment still requires an allowed frame or an active transition', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(20, 0, false, false, false, true), { managed: false, direction: 0 });
+  assert.deepEqual(gesture.update(50, 100, false, true, false, true), { managed: false, direction: 0 });
+  assert.deepEqual(gesture.update(20, 400, true, false, false, true), { managed: true, direction: 0 });
+});
+
+test('menu-consumed diagonal momentum remains contained after unlocking', () => {
+  const gesture = new WheelGesture();
+  assert.deepEqual(gesture.update(20, 0, false, false, false), { managed: false, direction: 0 });
+  gesture.consume(50);
+  assert.deepEqual(gesture.update(20, 100, false, false, true, true), { managed: true, direction: 0 });
+  assert.deepEqual(gesture.update(200, 200, false, true, true, true), { managed: true, direction: 0 });
+  assert.deepEqual(gesture.update(50, 500, false, true, true, true), { managed: true, direction: 1 });
+});
+
 test('native home sections keep entry and exit native while neighboring destinations are controlled', () => {
   const viewport = 800;
   const frames: FrameBounds[] = [

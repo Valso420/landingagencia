@@ -13,7 +13,13 @@ if (frames.length > 1 && main) {
   let destination: FrameStop | undefined;
   let revision = 0;
   let effects: Animation[] = [];
-  let touch: { x: number; y: number; position: number; axis: 'x' | 'y' | null; consumed: boolean; native: boolean } | undefined;
+  let selected: FrameStop | undefined;
+  let nativeNavigation = false;
+  let resizeFrame = 0;
+  let boundaryTimer = 0;
+  let touch: { x: number; y: number; position: number; axis: 'x' | 'y' | null; consumed: boolean; native: boolean; contained: boolean; horizontal: boolean } | undefined;
+
+  frames.filter(frame => frame.dataset.frameScroll !== 'native').forEach(frame => frame.classList.add('frame-managed'));
 
   const zoomed = () => isViewportZoomed(window.visualViewport?.scale ?? 1);
   const available = () => !main.inert && !zoomed();
@@ -22,6 +28,18 @@ if (frames.length > 1 && main) {
     const rect = frame.getBoundingClientRect();
     return { top: rect.top + scrollY, height: rect.height, nativeScroll: frame.dataset.frameScroll === 'native', stopAfter: frame.hasAttribute('data-frame-stop') };
   });
+  const select = (stop?: FrameStop) => {
+    if (stop) nativeNavigation = false;
+    selected = stop && frames[stop.index].dataset.frameScroll !== 'native' ? stop : undefined;
+    root.classList.toggle('is-frame-controlled', Boolean(selected));
+  };
+  const rememberPosition = () => {
+    if (destination || main.inert || zoomed() || nativeNavigation) return;
+    const bounds = frameBounds();
+    let index = 0;
+    bounds.forEach((frame, candidate) => { if (frame.top <= scrollY + 2) index = candidate; });
+    select({ index, offset: Math.max(0, Math.min(scrollY - bounds[index].top, bounds[index].height - innerHeight)) });
+  };
   const releaseBoundary = () => {
     boundaryEnabled = false;
     main.classList.remove('native-scroll-bounded');
@@ -52,6 +70,8 @@ if (frames.length > 1 && main) {
     }
     return false;
   };
+  const horizontalScroller = (target: EventTarget | null) => target instanceof Element
+    ? target.closest<HTMLElement>('.destination-cards') : null;
   const targetPosition = (stop: FrameStop) => {
     const bounds = frames[stop.index].getBoundingClientRect();
     const end = Math.max(0, bounds.height - innerHeight);
@@ -70,16 +90,29 @@ if (frames.length > 1 && main) {
     window.dispatchEvent(new Event('framechange'));
   };
   const interrupt = (event: Event) => {
-    const opensMenu = event.target instanceof Element && event.target.closest('.menu-toggle')
-      && (!(event instanceof KeyboardEvent) || event.key === 'Enter' || event.key === ' ');
-    // Settle the selected frame before the menu captures its background and locks scroll.
-    if (opensMenu && destination) window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
+    clearTimeout(boundaryTimer);
+    // An interruption must not leave an eased transition between two frames.
+    const stop = destination;
     cancel();
+    if (stop) reveal(stop);
     boundNativeScroll();
     // Native anchor navigation must see the full document before its default scroll.
-    if (event.type === 'click' && event.target instanceof Element && event.target.closest('a[href]')) releaseBoundary();
+    if (event.type === 'click' && event.target instanceof Element) {
+      const link = event.target.closest<HTMLAnchorElement>('a[href]');
+      if (link) {
+        releaseBoundary();
+        const url = new URL(link.href);
+        if (event instanceof MouseEvent && !event.button && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey
+          && !link.hasAttribute('download') && (!link.target || link.target === '_self')
+          && url.origin === location.origin && url.pathname === location.pathname && url.search === location.search) {
+          select();
+          nativeNavigation = true;
+        }
+      }
+    }
   };
   const reveal = (stop: FrameStop) => {
+    select(stop);
     window.scrollTo({ top: targetPosition(stop), behavior: 'instant' });
     window.dispatchEvent(new Event('framechange'));
   };
@@ -159,49 +192,68 @@ if (frames.length > 1 && main) {
       const eased = progress < .5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
       window.scrollTo({ top: origin + (targetPosition(stop) - origin) * eased, behavior: 'instant' });
       if (progress < 1) animation = requestAnimationFrame(tick);
-      else { cancel(); boundNativeScroll(); }
+      else { select(stop); cancel(); boundNativeScroll(); }
     };
     animation = requestAnimationFrame(tick);
   };
 
   document.addEventListener('wheel', event => {
-    if (event.ctrlKey || event.metaKey || zoomed()) { cancel(); releaseBoundary(); return; }
+    if (event.ctrlKey || event.metaKey || zoomed()) { cancel(); select(); releaseBoundary(); return; }
     if (main.inert) { wheel.consume(performance.now()); return; }
     if (excluded(event.target)) return;
+    if (nativeNavigation || !selected) { nativeNavigation = false; rememberPosition(); }
     if (!boundaryEnabled) boundNativeScroll();
-    const vertical = !event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX);
+    const dx = event.shiftKey && !event.deltaX ? event.deltaY : event.deltaX;
+    const dy = event.shiftKey ? 0 : event.deltaY;
+    const vertical = Math.abs(dy) > Math.abs(dx);
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;
-    const direction = Math.sign(event.deltaY);
-    const eligible = vertical && !canScrollInside(event.target, direction);
+    const direction = Math.sign(dy);
+    const nested = canScrollInside(event.target, direction);
+    const eligible = vertical && !nested;
     const allowFrame = canControlFrameGesture(frameBounds(), scrollY, innerHeight, direction);
-    const gesture = wheel.update(event.deltaY * unit, performance.now(), Boolean(destination), eligible, allowFrame);
-    if (!gesture.managed || !event.cancelable) return;
-    event.preventDefault();
+    const contain = !nested && Boolean(selected || destination);
+    const gesture = wheel.update(dy * unit, performance.now(), Boolean(destination), eligible, allowFrame, contain);
+    if (!gesture.managed) return;
+    if (!vertical) {
+      // Cancel diagonal Y without losing horizontal carousel movement.
+      if (dy && event.cancelable) {
+        event.preventDefault();
+        const scroller = horizontalScroller(event.target);
+        if (scroller) scroller.scrollLeft += dx * unit;
+      }
+      return;
+    }
+    if (event.cancelable) event.preventDefault();
     if (gesture.direction) advance(gesture.direction);
   }, { passive: false });
 
   document.addEventListener('touchstart', event => {
     touch = undefined;
-    if (event.touches.length !== 1) { cancel(); releaseBoundary(); return; }
+    if (event.touches.length !== 1) { cancel(); select(); releaseBoundary(); return; }
     if (zoomed() || excluded(event.target)) return;
+    if (!main.inert && (nativeNavigation || !selected)) { nativeNavigation = false; rememberPosition(); }
     if (!boundaryEnabled) boundNativeScroll();
     const point = event.touches[0];
     // A background gesture begun while the menu closes must stay consumed after unlock.
-    touch = { x: point.clientX, y: point.clientY, position: scrollY, axis: null, consumed: Boolean(destination) || main.inert, native: false };
+    touch = { x: point.clientX, y: point.clientY, position: scrollY, axis: null, consumed: Boolean(destination) || main.inert, native: false, contained: Boolean(selected || destination), horizontal: Boolean(horizontalScroller(event.target)) };
   }, { passive: true });
   document.addEventListener('touchmove', event => {
     if (!touch || zoomed()) return;
-    if (event.touches.length !== 1) { touch = undefined; cancel(); releaseBoundary(); return; }
+    if (event.touches.length !== 1) { touch = undefined; cancel(); select(); releaseBoundary(); return; }
     if (main.inert) touch.consumed = true;
     const dx = touch.x - event.touches[0].clientX;
     const dy = touch.y - event.touches[0].clientY;
     if (!touch.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 8) {
-      touch.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-      touch.native = canScrollInside(event.target, Math.sign(dy))
+      if (touch.contained) {
+        if (touch.horizontal && Math.abs(dx) > Math.abs(dy)) touch.axis = 'x';
+        else if (Math.abs(dy) >= 8) touch.axis = 'y';
+      } else touch.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (touch.axis) touch.native = canScrollInside(event.target, Math.sign(dy))
         || (!touch.consumed && !canControlFrameGesture(frameBounds(), touch.position, innerHeight, Math.sign(dy)));
     }
-    if (touch.axis !== 'y' || touch.native || !event.cancelable) return;
-    event.preventDefault();
+    if (touch.axis !== 'y' || touch.native) return;
+    // CSS can already prevent native panning, making the event non-cancelable.
+    if (event.cancelable) event.preventDefault();
     if (!touch.consumed && Math.abs(dy) >= 40) {
       touch.consumed = true;
       advance(Math.sign(dy));
@@ -241,9 +293,10 @@ if (frames.length > 1 && main) {
   }, { capture: true });
   // Focus navigation and history always take priority over a gesture or frame link.
   document.addEventListener('keydown', event => {
+    if (main.inert || event.defaultPrevented || excluded(event.target)) return;
     const direction = event.key === 'ArrowDown' || event.key === 'PageDown' ? 1
       : event.key === 'ArrowUp' || event.key === 'PageUp' ? -1
-      : event.key === ' ' && !(event.target instanceof Element && event.target.closest('a, button')) ? event.shiftKey ? -1 : 1 : 0;
+      : event.key === ' ' && !(event.target instanceof Element && event.target.closest('button')) ? event.shiftKey ? -1 : 1 : 0;
     if (nativeBoundary && direction && available() && !excluded(event.target) && !event.ctrlKey && !event.metaKey && !event.altKey
       && (destination || canControlFrameGesture(frameBounds(), scrollY, innerHeight, direction))) {
       event.preventDefault();
@@ -251,60 +304,96 @@ if (frames.length > 1 && main) {
       return;
     }
     interrupt(event);
-    if (event.key === 'Tab' || event.key === 'Home' || event.key === 'End') releaseBoundary();
+    if (direction || event.key === 'Tab' || event.key === 'Home' || event.key === 'End') {
+      select();
+      nativeNavigation = true;
+      releaseBoundary();
+    }
   });
   document.addEventListener('focusin', event => {
     if (!(event.target instanceof Element)) return;
-    if (beyondBoundary(event.target)) {
-      const wasBounded = boundaryEnabled;
+    const frame = event.target.closest<HTMLElement>('.screen-frame');
+    if (frame && frame.dataset.frameScroll !== 'native') {
       releaseBoundary();
-      if (wasBounded) event.target.scrollIntoView({ block: 'nearest', behavior: 'instant' });
-    } else boundNativeScroll();
+      const index = frames.indexOf(frame);
+      const bottom = event.target.getBoundingClientRect().bottom - frame.getBoundingClientRect().top;
+      reveal({ index, offset: Math.max(0, bottom - innerHeight + 24) });
+    } else {
+      if (frame) select();
+      boundNativeScroll();
+    }
   });
   document.addEventListener('pointerdown', event => { if (event.pointerType === 'mouse') interrupt(event); });
   const restoreNavigation = () => {
+    clearTimeout(boundaryTimer);
     cancel();
+    select();
+    nativeNavigation = true;
     releaseBoundary();
     requestAnimationFrame(() => {
       const target = fragmentTarget();
-      if (beyondBoundary(target)) target?.scrollIntoView({ block: 'start', behavior: 'instant' });
-      else boundNativeScroll();
+      if (beyondBoundary(target)) {
+        target?.scrollIntoView({ block: 'start', behavior: 'instant' });
+        nativeNavigation = false;
+        rememberPosition();
+      } else boundNativeScroll();
     });
   };
   window.addEventListener('hashchange', restoreNavigation);
   window.addEventListener('popstate', restoreNavigation);
-  window.addEventListener('pagehide', () => { cancel(); releaseBoundary(); });
+  window.addEventListener('pagehide', () => { cancel(); select(); releaseBoundary(); });
   window.addEventListener('pageshow', event => requestAnimationFrame(() => {
     if (event.persisted || restoringHistory || !beyondBoundary(fragmentTarget())) boundNativeScroll();
+    rememberPosition();
   }));
-  let boundaryTimer = 0;
   window.addEventListener('scroll', () => {
     clearTimeout(boundaryTimer);
-    // Let native Home/anchor scrolling finish before changing the document range.
-    if (nativeBoundary && !boundaryEnabled && !destination) boundaryTimer = window.setTimeout(boundNativeScroll, 160);
+    if (destination || main.inert || zoomed() || resizeFrame) return;
+    // Recover a controlled stop after external scrolling; native Home/anchors may finish first.
+    boundaryTimer = window.setTimeout(() => {
+      nativeNavigation = false;
+      if (selected) reveal(selected);
+      else rememberPosition();
+      boundNativeScroll();
+    }, 160);
   }, { passive: true });
-  window.addEventListener('resize', () => {
-    const wasTransitioning = Boolean(destination);
-    if (destination) {
-      window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
-      cancel();
-    }
-    if (boundaryEnabled || wasTransitioning) boundNativeScroll();
-  });
+  const resize = () => {
+    clearTimeout(boundaryTimer);
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      if (zoomed()) return;
+      const stop = destination ?? selected;
+      if (destination) cancel();
+      if (stop) reveal(stop);
+      if (boundaryEnabled || stop) boundNativeScroll();
+    });
+  };
+  window.addEventListener('resize', resize);
   let wasZoomed = zoomed();
+  root.classList.toggle('is-frame-zoomed', wasZoomed);
   window.visualViewport?.addEventListener('resize', () => {
     const isZoomed = zoomed();
-    if (isZoomed) { cancel(); releaseBoundary(); }
+    root.classList.toggle('is-frame-zoomed', isZoomed);
+    if (isZoomed) { cancel(); select(); releaseBoundary(); }
     // Initial viewport sizing must not cap a pending direct fragment visit.
-    else if (boundaryEnabled || wasZoomed) boundNativeScroll();
+    else {
+      if (wasZoomed) { rememberPosition(); boundNativeScroll(); }
+      resize();
+    }
     wasZoomed = isZoomed;
   });
   reducedMotion.addEventListener('change', () => {
-    if (destination) window.scrollTo({ top: targetPosition(destination), behavior: 'instant' });
+    const stop = destination;
     cancel();
+    if (stop) reveal(stop);
     boundNativeScroll();
   });
   const restoringHistory = (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'back_forward';
   if (!restoringHistory && !beyondBoundary(fragmentTarget())) boundNativeScroll();
-  document.fonts.ready.then(() => { if (boundaryEnabled) boundNativeScroll(); });
+  const layoutObserver = new ResizeObserver(() => {
+    if (boundaryEnabled || selected || destination) resize();
+  });
+  frames.forEach(frame => layoutObserver.observe(frame));
+  document.fonts.ready.then(() => { if (boundaryEnabled) boundNativeScroll(); rememberPosition(); });
 }
