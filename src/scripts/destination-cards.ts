@@ -5,13 +5,15 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck => {
   const list = deck.querySelector<HTMLElement>('.destination-cards');
   const items = [...deck.querySelectorAll<HTMLElement>('.destination-card-item')];
+  const backgrounds = [...deck.closest('[data-region]')!.querySelectorAll<HTMLImageElement>('[data-destination-background]')];
   const controls = deck.querySelector<HTMLElement>('.destination-controls');
   const previous = deck.querySelector<HTMLButtonElement>('.destination-previous');
   const next = deck.querySelector<HTMLButtonElement>('.destination-next');
   const position = deck.querySelector<HTMLElement>('.destination-position');
-  if (!list || !items.length || !controls || !previous || !next || !position) return;
+  if (!list || !items.length || backgrounds.length !== items.length || !controls || !previous || !next || !position) return;
 
   let index = 0;
+  let requestedIndex = 0;
   let effects: Animation[] = [];
   let revision = 0;
   let touch: { x: number; y: number; axis: 'x' | 'y' | null; consumed: boolean } | undefined;
@@ -29,6 +31,10 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
       item.inert = candidate !== index;
       if (candidate === index) item.removeAttribute('aria-hidden');
       else item.setAttribute('aria-hidden', 'true');
+    });
+    backgrounds.forEach((background, candidate) => {
+      background.hidden = candidate !== index;
+      background.toggleAttribute('data-menu-background', candidate === index);
     });
   };
 
@@ -49,17 +55,37 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
     items.slice(Math.max(0, index - 1), index + 2).forEach(item => {
       item.querySelector<HTMLImageElement>('.destination-card > img')?.setAttribute('loading', 'eager');
     });
+    backgrounds.slice(Math.max(0, index - 1), index + 2).forEach(background => {
+      background.loading = 'eager';
+    });
   };
 
-  const change = (candidate: number) => {
+  const change = async (candidate: number) => {
     const target = Math.max(0, Math.min(items.length - 1, candidate));
-    if (target === index) return;
+    if (target === requestedIndex) return;
+    requestedIndex = target;
     const currentRevision = ++revision;
     settle();
+    if (target === index) return;
+    const scrollBeforeLoad = scrollY;
+    const photos = [backgrounds[target], items[target].querySelector<HTMLImageElement>('.destination-card > img')!];
+    photos.forEach(photo => { photo.loading = 'eager'; });
+    // Keep the card and its background together while an uncached photo loads.
+    if (photos.some(photo => !photo.complete || !photo.naturalWidth)) {
+      await Promise.all(photos.map(photo => photo.decode().catch(() => {})));
+    }
+    if (revision !== currentRevision) return;
+    if (!available()) { requestedIndex = index; return; }
     const outgoing = items[index];
-    const transferFocus = outgoing.contains(document.activeElement);
+    const outgoingBackground = backgrounds[index];
+    // A delayed image must not pull focus back after the visitor scrolls away.
+    const transferFocus = outgoing.contains(document.activeElement) && scrollY === scrollBeforeLoad;
     index = target;
     const incoming = items[index];
+    const incomingBackground = backgrounds[index];
+    incomingBackground.hidden = false;
+    outgoingBackground.removeAttribute('data-menu-background');
+    incomingBackground.setAttribute('data-menu-background', '');
     incoming.hidden = false;
     incoming.inert = false;
     incoming.removeAttribute('aria-hidden');
@@ -73,21 +99,23 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
     effects = [
       outgoing.animate([{ opacity: 1 }, { opacity: 0 }], timing),
       incoming.animate([{ opacity: 0 }, { opacity: 1 }], timing),
+      outgoingBackground.animate([{ opacity: 1 }, { opacity: 0 }], timing),
+      incomingBackground.animate([{ opacity: 0 }, { opacity: 1 }], timing),
     ];
     void Promise.all(effects.map(effect => effect.finished)).catch(() => {}).finally(() => {
       if (revision === currentRevision) settle();
     });
   };
 
-  previous.addEventListener('click', () => change(index - 1));
-  next.addEventListener('click', () => change(index + 1));
+  previous.addEventListener('click', () => { void change(requestedIndex - 1); });
+  next.addEventListener('click', () => { void change(requestedIndex + 1); });
   deck.addEventListener('keydown', event => {
     if (event.ctrlKey || event.metaKey || event.altKey || !available()) return;
-    const target = event.key === 'ArrowRight' ? index + 1 : event.key === 'ArrowLeft' ? index - 1
+    const target = event.key === 'ArrowRight' ? requestedIndex + 1 : event.key === 'ArrowLeft' ? requestedIndex - 1
       : event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : undefined;
     if (target === undefined) return;
     event.preventDefault();
-    change(target);
+    void change(target);
   });
 
   deck.addEventListener('wheel', event => {
@@ -100,7 +128,7 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
     if (!gesture.managed) return;
     // Keep diagonal momentum in the same horizontal gesture, including at an end card.
     if (event.cancelable) event.preventDefault();
-    if (gesture.direction) change(index + gesture.direction);
+    if (gesture.direction) void change(requestedIndex + gesture.direction);
   }, { passive: false });
 
   deck.addEventListener('touchstart', event => {
@@ -122,7 +150,7 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
     suppressClickUntil = performance.now() + 400;
     if (!touch.consumed && Math.abs(dx) >= 40) {
       touch.consumed = true;
-      change(index + Math.sign(dx));
+      void change(requestedIndex + Math.sign(dx));
     }
   }, { passive: false });
   const endTouch = () => { touch = undefined; };
@@ -137,8 +165,8 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
     event.preventDefault();
     event.stopPropagation();
   }, { capture: true });
-  reducedMotion.addEventListener('change', () => { revision++; settle(); });
-  window.addEventListener('pagehide', () => { revision++; settle(); touch = undefined; suppressClick = false; });
+  reducedMotion.addEventListener('change', settle);
+  window.addEventListener('pagehide', () => { revision++; requestedIndex = index; settle(); touch = undefined; suppressClick = false; });
 
   settle();
   updateControls();

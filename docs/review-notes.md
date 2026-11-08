@@ -8,6 +8,8 @@ The home page keeps every section in one document. Inicio and Quienes somos use 
 
 Each region shows one destination card in a stationary slot. Horizontal touch gestures, trackpad scrolling and Shift+wheel replace it with a short opacity fade; vertical gestures continue through the page. A gesture advances at most one card and stops at the first or last card. Previous/next buttons and Left/Right arrow keys provide alternatives, with a position indicator and only the active card exposed to keyboard and assistive technology. Reduced motion changes cards immediately. Without JavaScript, all cards remain available in a native horizontal list.
 
+The region background uses the active destination's photograph and shares the card's fade. Uncached photos finish loading before the card and background switch. The first destination supplies the initial background, and the menu captures the active photograph. Without JavaScript, the background stays on the first destination while all cards remain accessible.
+
 A controlled change from a partially visible region uses continuous scrolling until the next frame; blur requires the outgoing frame to cover the viewport so it cannot expose an empty strip. Resizing during a controlled transition settles its destination against the new viewport height.
 
 The home footer's return-to-start link crossfades directly to the hero without scrolling past the intermediate regions. Any adjacent visible frame joins the outgoing fade when the footer is partially visible. It retains its native fragment link as a fallback, respects modified clicks, and returns keyboard focus to the main content after completion. Reduced motion makes this return immediate.

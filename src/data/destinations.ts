@@ -34,7 +34,6 @@ export interface Region {
   slug: RegionSlug;
   name: string;
   description: string;
-  image: ImageMetadata;
   destinationSlugs: readonly string[];
 }
 
@@ -249,21 +248,18 @@ export const regions: readonly Region[] = [
     slug: 'asia',
     name: 'Asia',
     description: 'De Japón al sudeste asiático: ciudades, templos, bahías y paisajes de Bali.',
-    image: japan,
     destinationSlugs: ['japon', 'tailandia', 'vietnam', 'indonesia'],
   },
   {
     slug: 'europa',
     name: 'Europa',
     description: 'Ciudades junto al río, pueblos de costa y recorridos entre Portugal e Italia.',
-    image: italy,
     destinationSlugs: ['portugal', 'italia'],
   },
   {
     slug: 'america',
     name: 'América',
     description: 'Recorridos de ejemplo entre ciudades, cultura y paisajes de Perú y México.',
-    image: peru,
     destinationSlugs: ['peru', 'mexico'],
   },
 ];
