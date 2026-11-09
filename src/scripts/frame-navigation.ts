@@ -1,4 +1,4 @@
-import { canControlFrameGesture, isViewportZoomed, nextFrameStop, WheelGesture, type FrameStop } from '../lib/frame-navigation';
+import { canControlFrameGesture, isViewportZoomed, nextFrameStop, restingFrameStop, WheelGesture, type FrameStop } from '../lib/frame-navigation';
 
 const frames = [...document.querySelectorAll<HTMLElement>('.screen-frame')];
 const main = document.querySelector('main');
@@ -17,6 +17,11 @@ if (frames.length > 1 && main) {
   let nativeNavigation = false;
   let resizeFrame = 0;
   let boundaryTimer = 0;
+  const supportsScrollEnd = 'onscrollend' in document;
+  let scrollPending = false;
+  let scrollInProgress = false;
+  let activeTouches = 0;
+  let lastWheelTime = -Infinity;
   let touch: { x: number; y: number; position: number; axis: 'x' | 'y' | null; consumed: boolean; native: boolean; contained: boolean; horizontal: boolean } | undefined;
 
   frames.filter(frame => frame.dataset.frameScroll !== 'native').forEach(frame => frame.classList.add('frame-managed'));
@@ -44,10 +49,7 @@ if (frames.length > 1 && main) {
   };
   const rememberPosition = () => {
     if (destination || main.inert || zoomed() || nativeNavigation) return;
-    const bounds = frameBounds();
-    let index = 0;
-    bounds.forEach((frame, candidate) => { if (frame.top <= scrollY + 2) index = candidate; });
-    select({ index, offset: Math.max(0, Math.min(scrollY - bounds[index].top, bounds[index].height - innerHeight)) });
+    select(restingFrameStop(frameBounds(), scrollY, innerHeight));
   };
   const releaseBoundary = () => {
     boundaryEnabled = false;
@@ -88,6 +90,8 @@ if (frames.length > 1 && main) {
     return Math.max(0, Math.min(bounds.top + scrollY + offset, root.scrollHeight - innerHeight));
   };
   const cancel = () => {
+    clearTimeout(boundaryTimer);
+    scrollPending = false;
     revision++;
     cancelAnimationFrame(animation);
     animation = 0;
@@ -96,6 +100,7 @@ if (frames.length > 1 && main) {
     effects = [];
     frames.forEach(frame => frame.classList.remove('frame-outgoing', 'frame-incoming'));
     root.classList.remove('is-frame-transitioning', 'is-frame-blurring');
+    updateTouchAction();
     window.dispatchEvent(new Event('framechange'));
   };
   const interrupt = (event: Event) => {
@@ -124,6 +129,26 @@ if (frames.length > 1 && main) {
     select(stop);
     window.scrollTo({ top: targetPosition(stop), behavior: 'instant' });
     window.dispatchEvent(new Event('framechange'));
+  };
+  const settleScroll = () => {
+    clearTimeout(boundaryTimer);
+    if (!scrollPending || activeTouches || (supportsScrollEnd && scrollInProgress)
+      || destination || resizeFrame || !available()) return;
+    // Wheel momentum belongs to one gesture until the existing 240 ms threshold passes.
+    const wheelWait = 260 - (performance.now() - lastWheelTime);
+    if (wheelWait > 0) { boundaryTimer = window.setTimeout(settleScroll, wheelWait); return; }
+    scrollPending = false;
+    scrollInProgress = false;
+    const explicitNavigation = nativeNavigation;
+    nativeNavigation = false;
+    if (!selected) rememberPosition();
+    // A native gesture can enter a region without ever revealing its recorded stop.
+    if (!explicitNavigation && selected && Math.abs(scrollY - targetPosition(selected)) > 1) reveal(selected);
+    boundNativeScroll();
+  };
+  const scheduleScrollSettlement = () => {
+    clearTimeout(boundaryTimer);
+    if (scrollPending) boundaryTimer = window.setTimeout(settleScroll, 160);
   };
   const blurTo = async (source: HTMLElement, stop: FrameStop, onComplete?: () => void) => {
     const currentRevision = revision;
@@ -207,6 +232,9 @@ if (frames.length > 1 && main) {
   };
 
   document.addEventListener('wheel', event => {
+    lastWheelTime = performance.now();
+    clearTimeout(boundaryTimer);
+    if (!supportsScrollEnd || !scrollInProgress) scheduleScrollSettlement();
     if (event.ctrlKey || event.metaKey || zoomed()) { cancel(); select(); releaseBoundary(); return; }
     if (main.inert) { wheel.consume(performance.now()); return; }
     if (event.defaultPrevented) { wheel.consume(performance.now()); return; }
@@ -241,6 +269,8 @@ if (frames.length > 1 && main) {
   }, { passive: false });
 
   document.addEventListener('touchstart', event => {
+    clearTimeout(boundaryTimer);
+    activeTouches = event.touches.length;
     touch = undefined;
     if (event.touches.length !== 1) { cancel(); select(); releaseBoundary(); return; }
     if (zoomed() || excluded(event.target)) return;
@@ -251,6 +281,7 @@ if (frames.length > 1 && main) {
     touch = { x: point.clientX, y: point.clientY, position: scrollY, axis: null, consumed: Boolean(destination) || main.inert, native: false, contained: Boolean(selected || destination), horizontal: Boolean(horizontalScroller(event.target)) };
   }, { passive: true });
   document.addEventListener('touchmove', event => {
+    activeTouches = event.touches.length;
     if (!touch || zoomed()) return;
     if (event.touches.length !== 1) { touch = undefined; cancel(); select(); releaseBoundary(); return; }
     if (main.inert) touch.consumed = true;
@@ -274,8 +305,12 @@ if (frames.length > 1 && main) {
     }
   }, { passive: false });
   const endTouch = (event: TouchEvent) => {
+    activeTouches = event.touches.length;
     touch = undefined;
-    if (!event.touches.length) boundNativeScroll();
+    if (!activeTouches) {
+      boundNativeScroll();
+      if (!supportsScrollEnd || !scrollInProgress) scheduleScrollSettlement();
+    }
   };
   document.addEventListener('touchend', endTouch, { passive: true });
   document.addEventListener('touchcancel', endTouch, { passive: true });
@@ -325,6 +360,8 @@ if (frames.length > 1 && main) {
     }
   });
   document.addEventListener('focusin', event => {
+    clearTimeout(boundaryTimer);
+    scrollPending = false;
     if (!(event.target instanceof Element)) return;
     const frame = event.target.closest<HTMLElement>('.screen-frame');
     if (frame && frame.dataset.frameScroll !== 'native') {
@@ -355,34 +392,35 @@ if (frames.length > 1 && main) {
   };
   window.addEventListener('hashchange', restoreNavigation);
   window.addEventListener('popstate', restoreNavigation);
-  window.addEventListener('pagehide', () => { cancel(); select(); releaseBoundary(); });
+  window.addEventListener('pagehide', () => { activeTouches = 0; scrollInProgress = false; cancel(); select(); releaseBoundary(); });
   window.addEventListener('pageshow', event => requestAnimationFrame(() => {
     if (event.persisted || restoringHistory || !beyondBoundary(fragmentTarget())) boundNativeScroll();
     rememberPosition();
   }));
   window.addEventListener('scroll', () => {
     clearTimeout(boundaryTimer);
+    scrollPending = true;
+    scrollInProgress = true;
     updateTouchAction();
-    if (destination || main.inert || zoomed() || resizeFrame) return;
-    // Recover a controlled stop after external scrolling; native Home/anchors may finish first.
-    boundaryTimer = window.setTimeout(() => {
-      nativeNavigation = false;
-      if (selected) reveal(selected);
-      else rememberPosition();
-      boundNativeScroll();
-    }, 160);
+    if (!supportsScrollEnd) scheduleScrollSettlement();
   }, { passive: true });
+  document.addEventListener('scrollend', event => {
+    if (event.target !== document) return;
+    scrollInProgress = false;
+    settleScroll();
+  });
   const resize = () => {
     clearTimeout(boundaryTimer);
     cancelAnimationFrame(resizeFrame);
     resizeFrame = requestAnimationFrame(() => {
       resizeFrame = 0;
       if (zoomed()) return;
-      const stop = destination ?? selected;
+      const stop = destination ?? (!activeTouches && !scrollInProgress ? selected : undefined);
       if (destination) cancel();
       if (stop) reveal(stop);
       if (boundaryEnabled || stop) boundNativeScroll();
       updateTouchAction();
+      if (!supportsScrollEnd || !scrollInProgress) scheduleScrollSettlement();
     });
   };
   window.addEventListener('resize', resize);
@@ -401,8 +439,10 @@ if (frames.length > 1 && main) {
   });
   reducedMotion.addEventListener('change', () => {
     const stop = destination;
+    const pending = scrollPending;
     cancel();
     if (stop) reveal(stop);
+    else { scrollPending = pending; if (!supportsScrollEnd || !scrollInProgress) scheduleScrollSettlement(); }
     boundNativeScroll();
   });
   const restoringHistory = (performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'back_forward';

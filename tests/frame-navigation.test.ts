@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { canControlFrameGesture, isViewportZoomed, nextFrameStop, WheelGesture, type FrameBounds } from '../src/lib/frame-navigation';
+import { canControlFrameGesture, isViewportZoomed, nextFrameStop, restingFrameStop, WheelGesture, type FrameBounds } from '../src/lib/frame-navigation';
 
 test('viewport scale rounding does not disable frame navigation at default zoom', () => {
   for (const scale of [1, 1.0000001192092896, 1.0000009536743164, 1.001]) {
@@ -167,6 +167,51 @@ test('native home sections keep entry and exit native while neighboring destinat
   ] as const) {
     assert.equal(canControlFrameGesture(frames, position, viewport, direction), controlled, `${position}, ${direction}`);
   }
+});
+
+test('resting after native entry aligns a destination that fits the viewport', () => {
+  const viewport = 808;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true },
+    { top: 808, height: viewport, nativeScroll: true },
+    { top: 1_616, height: viewport },
+    { top: 2_424, height: viewport },
+  ];
+  assert.deepEqual(restingFrameStop(frames, 1_755, viewport), { index: 2, offset: 0 });
+  assert.deepEqual(restingFrameStop(frames, 1_616, viewport), { index: 2, offset: 0 });
+  assert.deepEqual(restingFrameStop(frames, 2_600, viewport), { index: 3, offset: 0 });
+});
+
+test('resting within native home sections leaves their reading position free', () => {
+  const viewport = 808;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true },
+    { top: 808, height: viewport, nativeScroll: true },
+    { top: 1_616, height: viewport },
+  ];
+  for (const position of [0, 300, 808, 1_200, 1_600]) {
+    assert.equal(restingFrameStop(frames, position, viewport), undefined, `Native position ${position} must not align.`);
+  }
+});
+
+test('resting in a tall destination preserves the current reading portion', () => {
+  const viewport = 800;
+  const frames: FrameBounds[] = [
+    { top: 0, height: viewport, nativeScroll: true },
+    { top: 800, height: 1_800 },
+    { top: 2_600, height: viewport },
+  ];
+  assert.deepEqual(restingFrameStop(frames, 800, viewport), { index: 1, offset: 0 });
+  assert.deepEqual(restingFrameStop(frames, 1_200, viewport), { index: 1, offset: 400 });
+  assert.deepEqual(restingFrameStop(frames, 1_800, viewport), { index: 1, offset: 1_000 });
+  assert.deepEqual(restingFrameStop(frames, 2_200, viewport), { index: 1, offset: 1_000 });
+  assert.deepEqual(restingFrameStop(frames, 2_600, viewport), { index: 2, offset: 0 });
+});
+
+test('resting a short or single-screen destination cannot produce a negative offset', () => {
+  assert.deepEqual(restingFrameStop([{ top: 0, height: 600 }], 0, 800), { index: 0, offset: 0 });
+  assert.deepEqual(restingFrameStop([{ top: 0, height: 800 }], 0, 800), { index: 0, offset: 0 });
+  assert.equal(restingFrameStop([], 0, 800), undefined);
 });
 
 test('partial short destination frames at native boundaries do not capture reverse scrolling', () => {

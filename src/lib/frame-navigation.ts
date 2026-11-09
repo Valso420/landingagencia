@@ -6,6 +6,15 @@ export function isViewportZoomed(scale: number): boolean {
   return scale > 1.01;
 }
 
+export function restingFrameStop(frames: FrameBounds[], position: number, viewport: number): FrameStop | undefined {
+  if (!frames.length) return;
+  let index = 0;
+  frames.forEach((frame, candidate) => { if (frame.top <= position + 2) index = candidate; });
+  const frame = frames[index];
+  if (frame.nativeScroll) return;
+  return { index, offset: Math.max(0, Math.min(position - frame.top, frame.height - viewport)) };
+}
+
 export function nextFrameStop(frames: FrameBounds[], position: number, viewport: number, direction: number): FrameStop | undefined {
   if (!frames.length || !direction) return;
   let index = 0;
