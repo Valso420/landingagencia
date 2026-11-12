@@ -34,10 +34,11 @@ import { agency } from '../config/agency';
   </footer>
 </BaseLayout>
 <style>
-  .home-about { z-index: 2; display: flex; align-items: center; background: var(--paper); padding: calc(var(--header-height) + clamp(12px, 2vh, 24px)) 24px max(20px, env(safe-area-inset-bottom)); }
-  .home-about-inner { display: flex; flex-direction: column; gap: clamp(12px, 2.8vh, 24px); max-width: 1100px; width: 100%; margin: auto; }
+  /* Keep the section and its proportions steady while mobile browser controls resize. */
+  .home-about { --screen-height: 100svh; z-index: 2; display: flex; align-items: center; background: var(--paper); padding: calc(var(--header-height) + clamp(12px, calc(var(--screen-height) * .02), 24px)) 24px max(20px, env(safe-area-inset-bottom)); }
+  .home-about-inner { display: flex; flex-direction: column; gap: clamp(12px, calc(var(--screen-height) * .028), 24px); max-width: 1100px; width: 100%; margin: auto; }
   .home-about-image { width: 100%; height: clamp(84px, calc(var(--screen-height) * .25), 228px); object-fit: cover; filter: grayscale(1); }
-  .home-about-copy { display: flex; flex-direction: column; gap: clamp(10px, 1.8vh, 16px); }
+  .home-about-copy { display: flex; flex-direction: column; gap: clamp(10px, calc(var(--screen-height) * .018), 16px); }
   .home-about-copy h2 { font-family: 'Montserrat',sans-serif; font-size: clamp(30px, 9vw, 35px); font-weight: 500; line-height: 1.2; letter-spacing: -1.05px; }
   .home-about-lead { font-size: clamp(16px, 4.6vw, 18px); line-height: 1.43; }
   .home-about-detail { color: var(--muted); font-size: 15px; line-height: 1.43; }
