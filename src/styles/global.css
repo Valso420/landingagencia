@@ -282,3 +282,36 @@ main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: cli
   .main-menu li+li { margin-top: 4px; }
   .hero-cta { min-height: 49px; }
 }
+
+@media (min-width: 1024px) {
+  .window-hero {
+    --desktop-window-width: min(82vw, calc(var(--window-scene-height) * .8), clamp(600px, 48vw, 940px));
+    --hero-window-center: calc(var(--window-scene-height) * .46);
+    --hero-cta-height: 52px;
+    --hero-cta-gap: clamp(24px, 3svh, 36px);
+  }
+  .window-scene {
+    top: var(--hero-window-center);
+    opacity: .6;
+    mask-image: radial-gradient(ellipse 48% 41% at 50% 50%, #000 85%, transparent);
+  }
+  .window-hero h1 {
+    top: calc(var(--hero-window-center) - var(--desktop-window-width) * .15);
+    font-size: clamp(32px, calc(var(--window-scene-height) * .067), 72px);
+  }
+  .hero-cta {
+    width: clamp(240px, calc(var(--desktop-window-width) * .46), 360px);
+    min-height: var(--hero-cta-height);
+    /* The source image's lower frame sits about .51 image widths below its center. */
+    bottom: max(var(--screen-cta-inset), calc(var(--window-scene-height) - var(--hero-window-center) - var(--desktop-window-width) * .51 - var(--hero-cta-gap) - var(--hero-cta-height)));
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 650px) {
+  .window-hero {
+    --desktop-window-width: min(calc(var(--window-scene-height) * .74), calc((var(--window-scene-height) - var(--hero-window-center) - var(--hero-cta-height) - var(--screen-cta-inset) - var(--hero-cta-gap)) / .51));
+    --hero-window-center: calc(var(--window-scene-height) * .44);
+    --hero-cta-height: 49px;
+    --hero-cta-gap: 24px;
+  }
+}
