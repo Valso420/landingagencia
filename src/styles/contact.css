@@ -1,11 +1,11 @@
 .contact-page { z-index: 2; color: white; background: var(--night); display: flex; flex-direction: column; }
 .contact-editorial { width: 100%; height: clamp(92px, calc(var(--screen-height) * .333), 281px); object-fit: cover; object-position: center 20.5%; }
-.contact-content { padding: clamp(20px, 4.7vh, 40px) 24px max(20px, env(safe-area-inset-bottom)); max-width: 680px; width: 100%; margin: auto; display: flex; flex-direction: column; gap: clamp(10px, 2.1vh, 18px); }
+.contact-content { padding: clamp(20px, 4.7svh, 40px) 24px max(20px, env(safe-area-inset-bottom)); max-width: 680px; width: 100%; margin: auto; display: flex; flex-direction: column; gap: clamp(10px, 2.1svh, 18px); }
 .contact-content h1 { font-family: 'Montserrat',sans-serif; font-size: clamp(38px, 13.33vw, 52px); font-weight: 700; line-height: 1; letter-spacing: -2.08px; }
 .contact-lead { font-size: clamp(15px, 4.35vw, 17px); line-height: 1.35; }
 .contact-channel { font-size: 16px; font-weight: 500; line-height: 1.35; }
 .contact-pending { font-size: 14px; line-height: 1.35; color: var(--gray); }
-.contact-destination { border-top: 1px solid var(--muted); padding-top: clamp(10px, 2vh, 18px); font-size: 15px; line-height: 1.4; }
+.contact-destination { border-top: 1px solid var(--muted); padding-top: clamp(10px, 2svh, 18px); font-size: 15px; line-height: 1.4; }
 .contact-back-links { margin-top: 4px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 20px; }
 .contact-back-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
 @media(max-height:700px) and (max-width:899px) {

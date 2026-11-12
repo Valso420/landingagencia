@@ -7,6 +7,12 @@ if (frames.length > 1 && main) {
   const root = document.documentElement;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const wheel = new WheelGesture();
+  const readViewportHeight = () => {
+    const height = parseFloat(getComputedStyle(frames[0]).minHeight);
+    return Number.isFinite(height) && height > 0 ? height : innerHeight;
+  };
+  let viewportHeight = readViewportHeight();
+  let viewportWidth = innerWidth;
   const nativeBoundary = frames.find(frame => frame.hasAttribute('data-frame-stop'));
   let boundaryEnabled = false;
   let animation = 0;
@@ -36,8 +42,8 @@ if (frames.length > 1 && main) {
   const updateTouchAction = () => {
     const bounds = frameBounds();
     // Touch permissions must be set before a gesture starts, including at native boundaries.
-    const up = !canControlFrameGesture(bounds, scrollY, innerHeight, -1);
-    const down = !canControlFrameGesture(bounds, scrollY, innerHeight, 1);
+    const up = !canControlFrameGesture(bounds, scrollY, viewportHeight, -1);
+    const down = !canControlFrameGesture(bounds, scrollY, viewportHeight, 1);
     const vertical = up && down ? 'pan-y' : up ? 'pan-up' : down ? 'pan-down' : '';
     root.style.setProperty('--frame-touch-action', `pan-x ${vertical} pinch-zoom`);
   };
@@ -49,7 +55,7 @@ if (frames.length > 1 && main) {
   };
   const rememberPosition = () => {
     if (destination || main.inert || zoomed() || nativeNavigation) return;
-    select(restingFrameStop(frameBounds(), scrollY, innerHeight));
+    select(restingFrameStop(frameBounds(), scrollY, viewportHeight));
   };
   const releaseBoundary = () => {
     boundaryEnabled = false;
@@ -59,7 +65,7 @@ if (frames.length > 1 && main) {
   const boundNativeScroll = () => {
     if (!nativeBoundary || destination || zoomed()) return;
     const bottom = nativeBoundary.getBoundingClientRect().bottom;
-    if (!boundaryEnabled && scrollY > Math.max(nativeBoundary.getBoundingClientRect().top + scrollY, bottom + scrollY - innerHeight) + 2) return;
+    if (!boundaryEnabled && scrollY > Math.max(nativeBoundary.getBoundingClientRect().top + scrollY, bottom + scrollY - viewportHeight) + 2) return;
     // Clip overflow without creating a nested scroller: native touch inertia stops here.
     main.style.setProperty('--native-scroll-end', `${bottom - main.getBoundingClientRect().top}px`);
     main.classList.add('native-scroll-bounded');
@@ -85,7 +91,7 @@ if (frames.length > 1 && main) {
     ? target.closest('.destination-deck')?.querySelector<HTMLElement>('.destination-cards') : null;
   const targetPosition = (stop: FrameStop) => {
     const bounds = frames[stop.index].getBoundingClientRect();
-    const end = Math.max(0, bounds.height - innerHeight);
+    const end = Math.max(0, bounds.height - viewportHeight);
     const offset = stop.offset === 'end' ? end : Math.min(stop.offset, end);
     return Math.max(0, Math.min(bounds.top + scrollY + offset, root.scrollHeight - innerHeight));
   };
@@ -201,8 +207,8 @@ if (frames.length > 1 && main) {
   const advance = (direction: number) => {
     if (destination || !available()) return;
     const bounds = frameBounds();
-    if (!canControlFrameGesture(bounds, scrollY, innerHeight, direction)) return;
-    const stop = nextFrameStop(bounds, scrollY, innerHeight, direction);
+    if (!canControlFrameGesture(bounds, scrollY, viewportHeight, direction)) return;
+    const stop = nextFrameStop(bounds, scrollY, viewportHeight, direction);
     if (!stop) return;
     releaseBoundary();
     const origin = scrollY;
@@ -248,7 +254,7 @@ if (frames.length > 1 && main) {
     const direction = Math.sign(dy);
     const nested = canScrollInside(event.target, direction);
     const eligible = vertical && !nested;
-    const allowFrame = canControlFrameGesture(frameBounds(), scrollY, innerHeight, direction);
+    const allowFrame = canControlFrameGesture(frameBounds(), scrollY, viewportHeight, direction);
     const contain = !nested && Boolean(selected || destination);
     const gesture = wheel.update(dy * unit, performance.now(), Boolean(destination), eligible, allowFrame, contain);
     if (!gesture.managed) {
@@ -293,7 +299,7 @@ if (frames.length > 1 && main) {
         else if (Math.abs(dy) >= 8) touch.axis = 'y';
       } else touch.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
       if (touch.axis) touch.native = canScrollInside(event.target, Math.sign(dy))
-        || (!touch.consumed && !canControlFrameGesture(frameBounds(), touch.position, innerHeight, Math.sign(dy)));
+        || (!touch.consumed && !canControlFrameGesture(frameBounds(), touch.position, viewportHeight, Math.sign(dy)));
     }
     if (touch.axis !== 'y') return;
     if (touch.native) { select(); return; }
@@ -347,7 +353,7 @@ if (frames.length > 1 && main) {
       : event.key === 'ArrowUp' || event.key === 'PageUp' ? -1
       : event.key === ' ' && !(event.target instanceof Element && event.target.closest('button')) ? event.shiftKey ? -1 : 1 : 0;
     if (nativeBoundary && direction && available() && !excluded(event.target) && !event.ctrlKey && !event.metaKey && !event.altKey
-      && (destination || canControlFrameGesture(frameBounds(), scrollY, innerHeight, direction))) {
+      && (destination || canControlFrameGesture(frameBounds(), scrollY, viewportHeight, direction))) {
       event.preventDefault();
       if (!event.repeat) advance(direction);
       return;
@@ -409,7 +415,13 @@ if (frames.length > 1 && main) {
     scrollInProgress = false;
     settleScroll();
   });
-  const resize = () => {
+  const resize = (force = false) => {
+    if (zoomed()) return;
+    const height = readViewportHeight();
+    // Browser controls change the visible viewport, not the stable page dimensions.
+    if (!force && innerWidth === viewportWidth && Math.abs(height - viewportHeight) < 1) return;
+    viewportWidth = innerWidth;
+    viewportHeight = height;
     clearTimeout(boundaryTimer);
     cancelAnimationFrame(resizeFrame);
     resizeFrame = requestAnimationFrame(() => {
@@ -423,7 +435,7 @@ if (frames.length > 1 && main) {
       if (!supportsScrollEnd || !scrollInProgress) scheduleScrollSettlement();
     });
   };
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', () => resize());
   let wasZoomed = zoomed();
   root.classList.toggle('is-frame-zoomed', wasZoomed);
   window.visualViewport?.addEventListener('resize', () => {
@@ -432,8 +444,8 @@ if (frames.length > 1 && main) {
     if (isZoomed) { cancel(); select(); releaseBoundary(); }
     // Initial viewport sizing must not cap a pending direct fragment visit.
     else {
+      resize(wasZoomed);
       if (wasZoomed) { rememberPosition(); boundNativeScroll(); }
-      resize();
     }
     wasZoomed = isZoomed;
   });
@@ -449,7 +461,7 @@ if (frames.length > 1 && main) {
   if (!restoringHistory && !beyondBoundary(fragmentTarget())) boundNativeScroll();
   updateTouchAction();
   const layoutObserver = new ResizeObserver(() => {
-    if (boundaryEnabled || selected || destination) resize();
+    if (boundaryEnabled || selected || destination) resize(true);
   });
   frames.forEach(frame => layoutObserver.observe(frame));
   document.fonts.ready.then(() => { if (boundaryEnabled) boundNativeScroll(); rememberPosition(); });

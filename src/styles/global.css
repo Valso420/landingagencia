@@ -8,8 +8,8 @@
   --muted: #575652;
   --line: #dad7d0;
   --gray: #b7b5af;
+  /* Keep every page stable while mobile browser controls expand or collapse. */
   --screen-height: 100svh;
-  /* Keep the scene stable while mobile browser controls expand or collapse. */
   --window-scene-height: 100svh;
   --header-height: calc(76px + env(safe-area-inset-top, 0px));
   --screen-cta-inset: max(24px, env(safe-area-inset-bottom, 0px));
@@ -19,12 +19,13 @@
 }
 
 * { box-sizing: border-box; }
-@supports (height: 100dvh) { :root { --screen-height: 100dvh; } }
 html { scroll-behavior: smooth; scroll-snap-type: y mandatory; scrollbar-gutter: stable; }
 html:has([data-frame-scroll='native']) { scroll-snap-type: none; }
 html.is-frame-transitioning { scroll-behavior: auto; scroll-snap-type: none; }
 html.is-frame-blurring main { pointer-events: none; }
-body { margin: 0; }
+/* Reserve visible space at the document end without resizing any screen content. */
+body { margin: 0; padding-bottom: max(0px, calc(100dvh - 100svh)); }
+body:has(.agency-page), body:has(.destination-details) { background: var(--paper); }
 .screen-frame {
   position: relative;
   z-index: 2;
@@ -154,7 +155,7 @@ main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: cli
 .menu-enhanced .menu-backdrop { display: block; position: fixed; inset: 0; z-index: -1; overflow: hidden; opacity: .22; pointer-events: none; }
 .menu-photo { position: absolute; max-width: none; }
 .menu-window { position: absolute; width: min(124.1vw, calc(var(--window-scene-height) * .64), 660px); aspect-ratio: 2/3; left: 50%; top: calc(var(--window-scene-height) * .46); transform: translate(-50%, -50%); mask-image: linear-gradient(transparent, #000 4%, #000 93%, transparent); }
-.menu-enhanced .menu-inner { min-height: var(--screen-height); display: grid; grid-template-rows: minmax(min-content, 1fr) auto minmax(min-content, 1fr); gap: 24px; max-width: var(--screen-cta-max-width); padding: max(clamp(24px, 4.62dvh, 39px), env(safe-area-inset-top, 0px)) 0 var(--screen-cta-inset); }
+.menu-enhanced .menu-inner { min-height: var(--screen-height); display: grid; grid-template-rows: minmax(min-content, 1fr) auto minmax(min-content, 1fr); gap: 24px; max-width: var(--screen-cta-max-width); padding: max(clamp(24px, 4.62svh, 39px), env(safe-area-inset-top, 0px)) 0 var(--screen-cta-inset); }
 .menu-enhanced .menu-brand { align-self: start; margin-top: calc(var(--header-height) - 33px); }
 .menu-enhanced .menu-social { align-self: end; }
 .menu-is-open { overflow: hidden; }

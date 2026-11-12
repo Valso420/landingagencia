@@ -27,19 +27,30 @@
   z-index: -1;
 }
 
+/* Blend the native scroll boundary into the document's end reserve. */
+.region-panel[data-frame-stop]::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: clamp(24px, 8svh, 64px);
+  background: linear-gradient(transparent, var(--night) 90%);
+  pointer-events: none;
+  z-index: -1;
+}
+
 .region-content {
   display: grid;
   grid-template-rows: auto minmax(180px, 1fr) auto;
-  gap: clamp(16px, 3.5dvh, 32px);
+  gap: clamp(16px, 3.5svh, 32px);
   height: var(--screen-height);
   min-height: min-content;
-  padding: calc(var(--header-height) + clamp(12px, 3dvh, 28px)) 24px max(24px, env(safe-area-inset-bottom));
+  padding: calc(var(--header-height) + clamp(12px, 3svh, 28px)) 24px max(24px, env(safe-area-inset-bottom));
 }
 
 .region-title {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
-  font-size: clamp(44px, min(17.95vw, 8.3dvh), 70px);
+  font-size: clamp(44px, min(17.95vw, 8.3svh), 70px);
   font-weight: 500;
   line-height: 1;
   letter-spacing: -.1em;
@@ -197,7 +208,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
 .region-description {
   margin: 0;
   max-width: 345px;
-  font-size: clamp(17px, 2.8dvh, 24px);
+  font-size: clamp(17px, 2.8svh, 24px);
   line-height: 1.33;
 }
 
@@ -220,7 +231,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: clamp(16px, 3dvh, 32px);
+  gap: clamp(16px, 3svh, 32px);
   isolation: isolate;
   overflow: hidden;
   padding: calc(var(--header-height) + 12px) 24px max(24px, env(safe-area-inset-bottom));
@@ -276,7 +287,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
 .destination-cover-title h1 {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
-  font-size: min(var(--destination-title-size), 21.026vw, 10.2dvh);
+  font-size: min(var(--destination-title-size), 21.026vw, 10.2svh);
   line-height: 1.05;
   font-weight: 700;
   letter-spacing: -.04em;
@@ -292,9 +303,9 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
 .destination-summary {
   display: grid;
   flex-shrink: 0;
-  gap: clamp(8px, 1.6dvh, 14px);
+  gap: clamp(8px, 1.6svh, 14px);
   border-radius: 20px;
-  padding: clamp(16px, 2.6dvh, 22px) 20px 17px;
+  padding: clamp(16px, 2.6svh, 22px) 20px 17px;
   background: rgb(247 245 240 / 94%);
   color: #202020;
   backdrop-filter: blur(9px);
@@ -303,7 +314,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
 .destination-summary h2 {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
-  font-size: clamp(22px, 3.4dvh, var(--destination-summary-size));
+  font-size: clamp(22px, 3.4svh, var(--destination-summary-size));
   line-height: 1.05;
   letter-spacing: -.04em;
   font-weight: 700;
@@ -312,7 +323,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
 .destination-summary > p {
   margin: 0;
   color: #575652;
-  font-size: clamp(13px, 1.78dvh, 15px);
+  font-size: clamp(13px, 1.78svh, 15px);
   line-height: 1.37;
 }
 
@@ -347,7 +358,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: clamp(24px, 4dvh, 40px);
+  gap: clamp(24px, 4svh, 40px);
   background: #f5f3ee;
   color: #202020;
   padding: calc(var(--header-height) + 24px) 24px max(32px, env(safe-area-inset-bottom));
@@ -357,7 +368,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
 .destination-stops-inner { width: 100%; max-width: 760px; margin-inline: auto; }
 
 .destination-stops h2 {
-  margin: 0 0 clamp(18px, 3dvh, 26px);
+  margin: 0 0 clamp(18px, 3svh, 26px);
   font-family: 'Montserrat', sans-serif;
   font-size: 23px;
   line-height: 1.05;
@@ -366,7 +377,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
 
 .destination-stops ol {
   display: grid;
-  gap: clamp(18px, 3dvh, 26px);
+  gap: clamp(18px, 3svh, 26px);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -386,7 +397,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
   line-height: 1.37;
 }
 
-.destination-stops h3 { margin: 0; font-family: 'Montserrat', sans-serif; font-size: clamp(25px, 3.7dvh, 31px); line-height: 1.2; font-weight: 700; overflow-wrap: anywhere; }
+.destination-stops h3 { margin: 0; font-family: 'Montserrat', sans-serif; font-size: clamp(25px, 3.7svh, 31px); line-height: 1.2; font-weight: 700; overflow-wrap: anywhere; }
 .stop-area { margin: 5px 0 0; font-size: 14px; line-height: 1.37; font-weight: 500; }
 .stop-description { margin: 5px 0 0; color: #575652; font-size: 15px; line-height: 1.37; }
 
@@ -402,7 +413,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
   .destinations-contact > div { display: flex; align-items: center; justify-content: space-between; gap: 32px; }
   .destinations-contact-link { min-width: 342px; margin-top: 0; }
   .region-content { max-width: 1280px; margin-inline: auto; padding-inline: 48px; }
-  .region-title { font-size: clamp(44px, min(7.8vw, 10dvh), 100px); }
+  .region-title { font-size: clamp(44px, min(7.8vw, 10svh), 100px); }
   .destination-cards { margin-inline: -48px; padding-inline: 48px; gap: 24px; scroll-padding-inline: 48px; }
   .destination-card-item { flex-basis: 320px; }
   .destination-deck.is-enhanced { width: min(320px, 100%); }
@@ -411,7 +422,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
   .region-description { max-width: 680px; }
   .destination-cover { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 440px); align-items: center; padding-inline: max(48px, calc((100vw - 1104px) / 2)); gap: 48px; }
   .destination-cover-title { margin: 0; padding: 0; container-type: inline-size; }
-  .destination-cover-title h1 { font-size: min(20cqw, 12dvh, 110px); }
+  .destination-cover-title h1 { font-size: min(20cqw, 12svh, 110px); }
   .destination-cover-title p { font-size: 17px; }
   .destination-back { left: max(24px, calc((100vw - 1200px) / 2)); }
   .destination-summary { width: 100%; max-width: 440px; margin-left: auto; }
