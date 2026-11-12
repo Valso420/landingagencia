@@ -237,3 +237,48 @@ main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: cli
   .main-menu li a { min-height: 44px; font-size: 26px; }
   .main-menu li+li { margin-top: 8px; }
 }
+
+/* Keep the approved phone composition below the tablet breakpoint. */
+@media (min-width: 760px) {
+  :root {
+    --content-width: 1184px;
+    --page-gutter: clamp(32px, 5vw, 80px);
+    --content-inset: max(var(--page-gutter), calc((100% - var(--content-width)) / 2));
+    --header-height: calc(96px + env(safe-area-inset-top, 0px));
+    --screen-cta-inset: max(32px, env(safe-area-inset-bottom, 0px));
+    --desktop-window-width: min(82vw, calc(var(--window-scene-height) * .76), 860px);
+  }
+
+  .header-inner { max-width: none; padding-inline: var(--content-inset); }
+  .agency-name { font-size: 18px; }
+  .is-open .header-inner { height: var(--header-height); }
+  .menu-enhanced .menu-inner { max-width: 560px; gap: 32px; padding-block: var(--header-height) var(--screen-cta-inset); }
+  .menu-enhanced .menu-brand { margin-top: 0; font-size: clamp(64px, 8vw, 88px); }
+  .main-menu li a { min-height: 64px; font-size: clamp(36px, 4vw, 52px); }
+  .main-menu li+li { margin-top: 16px; }
+  .menu-enhanced .menu-social { width: 320px; justify-self: center; }
+
+  .window-scene, .menu-window {
+    width: var(--desktop-window-width);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent), linear-gradient(transparent, #000 8%, #000 90%, transparent);
+    mask-composite: intersect;
+  }
+  .window-hero h1 {
+    top: calc(var(--window-scene-height) * .48);
+    transform: translate(-50%, -50%);
+    width: min(60%, 400px);
+    font-size: clamp(32px, calc(var(--window-scene-height) * .075), 78px);
+  }
+  .hero-cta { width: 320px; min-height: 52px; border-radius: 28px; }
+}
+
+@media (min-width: 760px) and (max-height: 650px) {
+  :root { --header-height: calc(72px + env(safe-area-inset-top, 0px)); --screen-cta-inset: max(20px, env(safe-area-inset-bottom, 0px)); --desktop-window-width: min(82vw, calc(var(--window-scene-height) * .7), 860px); }
+  .window-scene, .menu-window { top: calc(var(--window-scene-height) * .44); }
+  .window-hero h1 { top: calc(var(--window-scene-height) * .46); }
+  .menu-enhanced .menu-inner { gap: 16px; padding-top: var(--header-height); }
+  .menu-enhanced .menu-brand { font-size: 44px; }
+  .main-menu li a { min-height: 44px; font-size: 30px; }
+  .main-menu li+li { margin-top: 4px; }
+  .hero-cta { min-height: 49px; }
+}

@@ -11,7 +11,7 @@ import { agency } from '../config/agency';
   <WindowHero />
   <section class="home-about screen-frame" id="agencia" aria-labelledby="about-title" data-header-theme="dark" data-frame-scroll="native">
     <div class="home-about-inner">
-      <Image class="home-about-image" src={planning} alt="Un mapa, una cámara y un cuaderno para planificar un viaje" widths={[400, 700, 1000]} sizes="(min-width: 800px) 500px, calc(100vw - 48px)" format="webp" loading="lazy" />
+      <Image class="home-about-image" src={planning} alt="Un mapa, una cámara y un cuaderno para planificar un viaje" widths={[400, 700, 1000]} sizes="(min-width: 1344px) 570px, (min-width: 760px) 45vw, calc(100vw - 48px)" format="webp" loading="lazy" />
       <div class="home-about-copy">
         <h2 id="about-title">Quiénes somos</h2>
         <p class="home-about-lead">Somos una agencia virtual enfocada en viajes al exterior y recorridos multidestino.</p>
@@ -51,17 +51,23 @@ import { agency } from '../config/agency';
   .home-footer-brand { border-top: 1px solid var(--muted); padding-top: 16px; display: flex; flex-direction: column; gap: 16px; }
   .home-footer-brand p { font-weight: 500; }
   .back-to-top { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: white; }
-  @media(min-width:800px) {
-    .home-about { padding: calc(var(--header-height) + 24px) 48px 32px; }
-    .home-about-inner { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 64px; }
-    .home-about-image { height: clamp(180px, calc(var(--screen-height) * .5), 460px); }
-    .home-about-copy h2 { font-size: 44px; }
-    .home-footer { padding: calc(var(--header-height) + 24px) 48px 32px; }
-    .home-footer h2 { font-size: 64px; }
-    .home-footer .button { max-width: 342px; }
-    .home-footer-brand { flex-direction: row; justify-content: space-between; align-items: center; margin-top: 16px; }
+  @media(min-width:760px) {
+    .home-about { padding: calc(var(--header-height) + 32px) var(--content-inset) 48px; }
+    .home-about-inner { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: center; gap: clamp(32px, 5vw, 80px); max-width: var(--content-width); }
+    .home-about-image { height: clamp(260px, calc(var(--screen-height) * .52), 580px); }
+    .home-about-copy { gap: clamp(16px, 2.5svh, 28px); }
+    .home-about-copy h2 { font-size: clamp(38px, 4.2vw, 60px); }
+    .home-about-lead { font-size: clamp(20px, 2vw, 26px); }
+    .home-about-detail { max-width: 42ch; font-size: 17px; line-height: 1.6; }
+    .home-about-copy .button { width: fit-content; min-width: 240px; max-width: 100%; margin-top: 8px; }
+    .home-footer { padding: calc(var(--header-height) + 32px) var(--content-inset) 48px; }
+    .home-footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .7fr); gap: 24px 48px; align-items: center; max-width: var(--content-width); }
+    .home-footer h2 { grid-row: 1 / 3; font-size: clamp(56px, 7vw, 100px); }
+    .home-footer-inner > p { grid-column: 2; max-width: 30ch; font-size: 20px; line-height: 1.5; align-self: end; }
+    .home-footer .button { grid-column: 2; max-width: 342px; align-self: start; }
+    .home-footer-brand { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; margin-top: clamp(32px, 7svh, 80px); padding-top: 24px; }
   }
-  @media(max-height:700px) and (max-width:799px) {
+  @media(max-height:700px) and (max-width:759px) {
     .home-about-image { height: clamp(84px, calc(var(--screen-height) * .18), 140px); }
     .home-about-inner { gap: 12px; }
     .home-about-copy { gap: 10px; }

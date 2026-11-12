@@ -50,6 +50,10 @@ The LAN commands listen on `0.0.0.0`. Connect both devices to the same trusted n
 
 The other valid contact destination values are `tailandia`, `vietnam`, `indonesia`, `portugal`, `italia`, `peru` and `mexico`. Each destination has a static page under `/destinos/<slug>/`, links back to its region and retains its selection in contact. Itineraries are illustrative, not bookable packages. The contact page displays a pending Instagram channel and collects no personal data. Only known destination slugs are shown, using text content. Unknown queries are ignored. Without JavaScript, navigation and destination content remain available; query-based contact context requires JavaScript.
 
+### Responsive layout
+
+The phone composition is preserved below 760 px. Tablet and desktop rules start at 760 px, with shared gutters and a content width capped at 1184 px. Region panels place their title and description beside a larger stationary destination card. Agency and contact content use two columns; destination covers and itinerary details split at 1024 px. Short landscape screens use compact spacing and allow taller content to remain scrollable. The window keeps its full frame and fixed wing, with its size limited by viewport height.
+
 ### Window lighting
 
 In development, use the phase selector or these URLs:

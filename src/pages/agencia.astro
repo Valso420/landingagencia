@@ -10,7 +10,7 @@ import { agency } from '../config/agency';
     <section class="agency-frame screen-frame" aria-labelledby="agency-title" data-header-theme="dark" data-frame-scroll="native">
       <div class="agency-content agency-intro-content">
         <h1 id="agency-title">Quiénes<br />somos</h1>
-        <Image class="agency-planning" src={planning} alt="Mapa y cámara fotográfica preparados para planificar un viaje" widths={[400, 700, 1100]} sizes="(min-width: 900px) 520px, calc(100vw - 48px)" format="webp" loading="eager" />
+        <Image class="agency-planning" src={planning} alt="Mapa y cámara fotográfica preparados para planificar un viaje" widths={[400, 700, 1100]} sizes="(min-width: 1344px) 570px, (min-width: 760px) 45vw, calc(100vw - 48px)" format="webp" loading="eager" />
         <div class="agency-introduction">
           <h2>Una agencia virtual.<br />Varios destinos<br />en un mismo viaje.</h2>
           <p>Nos enfocamos en viajes al exterior y propuestas multidestino. El recorrido se piensa como un conjunto: los lugares que querés conocer, el tiempo que tenés y la forma en la que te gusta viajar.</p>
@@ -19,7 +19,7 @@ import { agency } from '../config/agency';
     </section>
     <section class="agency-frame screen-frame" aria-labelledby="agency-approach-title" data-header-theme="dark" data-frame-scroll="native">
       <div class="agency-content agency-approach-content">
-        <Image class="agency-landscape" src={cinqueTerre} alt="Pueblo de Manarola, en Cinque Terre, junto al mar" widths={[400, 700, 1000]} sizes="(min-width: 900px) 520px, calc(100vw - 48px)" format="webp" loading="lazy" />
+        <Image class="agency-landscape" src={cinqueTerre} alt="Pueblo de Manarola, en Cinque Terre, junto al mar" widths={[400, 700, 1000]} sizes="(min-width: 1344px) 570px, (min-width: 760px) 45vw, calc(100vw - 48px)" format="webp" loading="lazy" />
         <div class="agency-approach">
           <h2 id="agency-approach-title">Cómo pensamos<br />cada recorrido</h2>
           <p>{agency.mission}</p>
@@ -54,22 +54,28 @@ import { agency } from '../config/agency';
   .agency-continuation { display: flex; flex-direction: column; gap: 18px; padding-top: 18px; }
   .agency-continuation .button { width: 100%; }
   .agency-continuation p { font-size: 12px; color: var(--muted); }
-  @media(max-height:700px) and (max-width:899px) {
+  @media(max-height:700px) and (max-width:759px) {
     .agency-planning { height: clamp(72px, calc(var(--screen-height) * .16), 112px); }
     .agency-intro-content { gap: 12px; }
     .agency-introduction { gap: 12px; }
     .agency-introduction h2 { font-size: 21px; }
     .agency-introduction p { font-size: 15px; line-height: 1.4; }
   }
-  @media(min-width:900px) {
-    .agency-frame { padding: calc(var(--header-height) + 24px) 48px 32px; }
-    .agency-content { max-width: 1100px; }
-    .agency-intro-content { display: grid; grid-template-columns: 1fr 1fr; gap: 32px 64px; align-items: center; }
-    h1 { grid-column: 1; grid-row: 1; font-size: 64px; }
-    .agency-planning { grid-column: 2; grid-row: 1/3; height: clamp(240px, calc(var(--screen-height) * .55), 520px); }
+  @media(min-width:760px) {
+    .agency-frame { padding: calc(var(--header-height) + 32px) var(--content-inset) 48px; }
+    .agency-content { max-width: var(--content-width); }
+    .agency-intro-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px clamp(32px, 5vw, 80px); align-items: center; }
+    h1 { grid-column: 1; grid-row: 1; font-size: clamp(44px, 5.3vw, 76px); }
+    h2 { font-size: clamp(24px, 2.4vw, 34px); }
+    p { font-size: 17px; line-height: 1.6; max-width: 52ch; }
+    .agency-planning { grid-column: 2; grid-row: 1/3; height: clamp(300px, calc(var(--screen-height) * .56), 600px); }
     .agency-introduction { grid-column: 1; grid-row: 2; }
-    .agency-approach-content { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-    .agency-landscape { height: clamp(240px, calc(var(--screen-height) * .5), 460px); }
-    .agency-team-content { max-width: 680px; }
+    .agency-approach-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 80px); align-items: center; }
+    .agency-landscape { height: clamp(300px, calc(var(--screen-height) * .56), 600px); }
+    .agency-approach h2 { font-size: clamp(30px, 3.3vw, 46px); }
+    .agency-team-content { max-width: 800px; gap: 28px; }
+    .agency-team-content h2 { font-size: clamp(32px, 3.5vw, 48px); }
+    .agency-pending { font-size: 17px; }
+    .agency-continuation .button { width: fit-content; min-width: 280px; max-width: 100%; }
   }
 </style>
