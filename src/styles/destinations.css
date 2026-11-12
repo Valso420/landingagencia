@@ -83,16 +83,18 @@
 
 .destination-deck.is-enhanced {
   display: grid;
-  grid-template-rows: minmax(180px, 1fr) 44px;
+  grid-template-rows: minmax(180px, 1fr) auto;
   gap: 10px;
   width: min(276px, 100%);
-  min-height: 234px;
+  min-height: min-content;
   max-height: 474px;
   touch-action: pan-y pinch-zoom;
 }
 
 .destination-deck.is-enhanced .destination-cards {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 0;
   min-height: 0;
   max-height: none;
@@ -104,6 +106,7 @@
 
 .destination-deck.is-enhanced .destination-card-item {
   grid-area: 1 / 1;
+  min-height: 0;
   width: 100%;
 }
 
@@ -111,29 +114,28 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
 
 .destination-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 4px;
 }
 
-.destination-controls button {
-  display: grid;
-  place-items: center;
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgb(255 255 255 / 60%);
-  border-radius: 50%;
-  padding: 0;
-  background: rgb(0 0 0 / 20%);
-  color: #fff;
-  font-size: 24px;
-  line-height: 1;
+.destination-choice {
+  flex: 1 0 auto;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 8px 4px;
+  background: transparent;
+  color: rgb(255 255 255 / 75%);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.33;
 }
 
-.destination-controls button:hover { background: rgb(255 255 255 / 20%); }
-.destination-controls button[aria-disabled='true'] { opacity: .4; cursor: default; }
-.destination-position { margin: 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.destination-choice:hover { color: #fff; }
+.destination-choice[aria-pressed='true'] { border-bottom-color: #fff; color: #fff; }
+.destination-choice:focus-visible { outline-offset: -3px; }
 
 .destination-card {
   position: relative;

@@ -9,7 +9,7 @@ const { standalone = false } = Astro.props;
 ---
 
 <section id="destinos" class:list={['destination-explorer', { 'destination-explorer--standalone': standalone }]} aria-label="Explorá nuestros destinos" data-destination-explorer>
-  <p class="sr-only" id="destination-carousel-help">Deslizá horizontalmente para cambiar de destino. También podés usar los botones anterior y siguiente o las flechas izquierda y derecha con el foco en las tarjetas.</p>
+  <p class="sr-only" id="destination-carousel-help">Deslizá horizontalmente o elegí un país debajo de la tarjeta para cambiar de destino. También podés usar las flechas izquierda y derecha con el foco en las tarjetas o en el selector.</p>
   {regions.map((region, index) => {
     const Heading = standalone && index === 0 ? 'h1' : 'h2';
     const items = region.destinationSlugs.map(slug => destinations.find(destination => destination.slug === slug)!);
@@ -35,10 +35,11 @@ const { standalone = false } = Astro.props;
                 </li>
               ))}
             </ul>
-            <div class="destination-controls" hidden>
-              <button type="button" class="destination-previous" aria-label={`Destino anterior en ${region.name}`} aria-controls={`destination-cards-${region.slug}`}><span aria-hidden="true">←</span></button>
-              <p class="destination-position" role="status" aria-live="polite" aria-atomic="true"></p>
-              <button type="button" class="destination-next" aria-label={`Destino siguiente en ${region.name}`} aria-controls={`destination-cards-${region.slug}`}><span aria-hidden="true">→</span></button>
+            <div class="destination-controls" role="group" aria-label={`Elegir destino en ${region.name}`} hidden>
+              {items.map((destination, destinationIndex) => (
+                <button type="button" class="destination-choice" aria-label={`Mostrar ${destination.name}`} aria-controls={`destination-cards-${region.slug}`} aria-pressed={destinationIndex === 0 ? 'true' : 'false'}>{destination.name}</button>
+              ))}
+              <p class="destination-position sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
             </div>
           </div>
           <p class="region-description">{region.description}</p>

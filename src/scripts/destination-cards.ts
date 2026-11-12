@@ -7,10 +7,9 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
   const items = [...deck.querySelectorAll<HTMLElement>('.destination-card-item')];
   const backgrounds = [...deck.closest('[data-region]')!.querySelectorAll<HTMLImageElement>('[data-destination-background]')];
   const controls = deck.querySelector<HTMLElement>('.destination-controls');
-  const previous = deck.querySelector<HTMLButtonElement>('.destination-previous');
-  const next = deck.querySelector<HTMLButtonElement>('.destination-next');
+  const choices = [...deck.querySelectorAll<HTMLButtonElement>('.destination-choice')];
   const position = deck.querySelector<HTMLElement>('.destination-position');
-  if (!list || !items.length || backgrounds.length !== items.length || !controls || !previous || !next || !position) return;
+  if (!list || !items.length || backgrounds.length !== items.length || choices.length !== items.length || !controls || !position) return;
 
   let index = 0;
   let requestedIndex = 0;
@@ -39,16 +38,8 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
   };
 
   const updateControls = () => {
-    previous.setAttribute('aria-disabled', String(index === 0));
-    next.setAttribute('aria-disabled', String(index === items.length - 1));
-    position.replaceChildren();
-    const count = document.createElement('span');
-    count.setAttribute('aria-hidden', 'true');
-    count.textContent = `${index + 1} / ${items.length}`;
-    const announcement = document.createElement('span');
-    announcement.className = 'sr-only';
-    announcement.textContent = `${items[index].dataset.destinationName}, ${index + 1} de ${items.length}`;
-    position.append(count, announcement);
+    choices.forEach((choice, candidate) => choice.setAttribute('aria-pressed', String(candidate === index)));
+    position.textContent = `${items[index].dataset.destinationName}, ${index + 1} de ${items.length}`;
   };
 
   const warmImages = () => {
@@ -107,14 +98,16 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
     });
   };
 
-  previous.addEventListener('click', () => { void change(requestedIndex - 1); });
-  next.addEventListener('click', () => { void change(requestedIndex + 1); });
+  choices.forEach((choice, candidate) => choice.addEventListener('click', () => { void change(candidate); }));
   deck.addEventListener('keydown', event => {
     if (event.ctrlKey || event.metaKey || event.altKey || !available()) return;
     const target = event.key === 'ArrowRight' ? requestedIndex + 1 : event.key === 'ArrowLeft' ? requestedIndex - 1
       : event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : undefined;
     if (target === undefined) return;
     event.preventDefault();
+    if (choices.includes(document.activeElement as HTMLButtonElement)) {
+      choices[Math.max(0, Math.min(items.length - 1, target))].focus({ preventScroll: true });
+    }
     void change(target);
   });
 
