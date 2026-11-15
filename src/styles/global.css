@@ -296,7 +296,7 @@ main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: cli
     mask-image: radial-gradient(ellipse 48% 41% at 50% 50%, #000 85%, transparent);
   }
   .window-hero h1 {
-    top: calc(var(--hero-window-center) - var(--desktop-window-width) * .15);
+    top: 50%;
     font-size: clamp(32px, calc(var(--window-scene-height) * .067), 72px);
   }
   .hero-cta {
