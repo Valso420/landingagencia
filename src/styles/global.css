@@ -10,6 +10,7 @@
   --gray: #b7b5af;
   /* Keep every page stable while mobile browser controls expand or collapse. */
   --screen-height: 100svh;
+  --visible-screen-extra: max(0px, calc(100dvh - var(--screen-height)));
   --window-scene-height: 100svh;
   --header-height: calc(76px + env(safe-area-inset-top, 0px));
   --screen-cta-inset: max(24px, env(safe-area-inset-bottom, 0px));
@@ -24,7 +25,8 @@ html:has([data-frame-scroll='native']) { scroll-snap-type: none; }
 html.is-frame-transitioning { scroll-behavior: auto; scroll-snap-type: none; }
 html.is-frame-blurring main { pointer-events: none; }
 /* Reserve visible space at the document end without resizing any screen content. */
-body { margin: 0; padding-bottom: max(0px, calc(100dvh - 100svh)); }
+body { margin: 0; padding-bottom: var(--visible-screen-extra); }
+body:has(> main.native-scroll-bounded) { padding-bottom: 0; }
 body:has(.agency-page), body:has(.destination-details) { background: var(--paper); }
 .screen-frame {
   position: relative;
@@ -32,6 +34,12 @@ body:has(.agency-page), body:has(.destination-details) { background: var(--paper
   min-height: var(--screen-height);
   scroll-snap-align: start;
   scroll-snap-stop: always;
+}
+.screen-frame:has(> [data-frame-content]) {
+  /* Extend the backdrop below the last reading position, even for long content. */
+  --frame-backdrop-extra: max(0px, calc(100lvh - var(--screen-height)));
+  padding-bottom: var(--frame-backdrop-extra);
+  scroll-margin-bottom: calc(0px - var(--frame-backdrop-extra));
 }
 html:not(.is-frame-zoomed) .frame-managed,
 html.is-frame-controlled:not(.is-frame-zoomed) .site-header:not(.is-open) { touch-action: var(--frame-touch-action, pan-x pinch-zoom); }
@@ -52,7 +60,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   outline-offset: 5px;
 }
 main:focus { outline: none; }
-main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: clip; overflow-anchor: none; }
+/* At Asia the extra visible area belongs to the region's photograph. */
+main.native-scroll-bounded { max-height: calc(var(--native-scroll-end) + var(--visible-screen-extra)); overflow: clip; overflow-anchor: none; }
 [hidden] { display: none!important; }
 .sr-only {
   position: absolute;
@@ -168,10 +177,11 @@ main.native-scroll-bounded { max-height: var(--native-scroll-end); overflow: cli
 .site-header:not(.menu-enhanced) ~ main .hero-contrast { position: absolute; }
 
 /* Keep the CTA and next section stable when mobile browser controls change. */
-.hero-section { --screen-height: var(--window-scene-height); background: var(--night); z-index: 0; clip-path: inset(0); }
+.hero-section { --screen-height: var(--window-scene-height); background: color-mix(in srgb, var(--night) 26%, black); z-index: 0; clip-path: inset(0); }
 [data-window-scene] { --scene-night: 0; --scene-warm: 0; --scene-dawn: 0; }
 .window-hero {
   position: relative;
+  background: var(--night);
   isolation: isolate;
   overflow: hidden;
   width: 100%;

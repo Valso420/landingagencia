@@ -18,7 +18,7 @@ const { standalone = false } = Astro.props;
         {items.map((destination, destinationIndex) => (
           <Image src={destination.image} alt="" class="region-background" data-destination-background={destination.slug} data-menu-background={destinationIndex === 0 ? '' : undefined} hidden={destinationIndex !== 0} quality={90} loading={standalone && index === 0 && destinationIndex === 0 ? 'eager' : 'lazy'} />
         ))}
-        <div class="region-content">
+        <div class="region-content" data-frame-content>
           <Heading id={`region-title-${region.slug}`} class="region-title" tabindex="-1">{region.name}</Heading>
           <div class="destination-deck" data-destination-deck>
             <ul id={`destination-cards-${region.slug}`} class="destination-cards" aria-label={`Recorridos ilustrativos de ${region.name}`} aria-describedby="destination-carousel-help" tabindex="0">

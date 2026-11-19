@@ -13,7 +13,10 @@ if (frames.length > 1 && main) {
   };
   let viewportHeight = readViewportHeight();
   let viewportWidth = innerWidth;
-  const nativeBoundary = frames.find(frame => frame.hasAttribute('data-frame-stop'));
+  // Full-screen backdrops extend beyond the content used for reading and navigation.
+  const frameContents = frames.map(frame => frame.querySelector<HTMLElement>(':scope > [data-frame-content]') ?? frame);
+  const boundaryIndex = frames.findIndex(frame => frame.hasAttribute('data-frame-stop'));
+  const nativeBoundary = frames[boundaryIndex];
   let boundaryEnabled = false;
   let animation = 0;
   let destination: FrameStop | undefined;
@@ -35,8 +38,8 @@ if (frames.length > 1 && main) {
   const zoomed = () => isViewportZoomed(window.visualViewport?.scale ?? 1);
   const available = () => !main.inert && !zoomed();
   const excluded = (target: EventTarget | null) => target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable], .main-menu, .phase-tools'));
-  const frameBounds = () => frames.map(frame => {
-    const rect = frame.getBoundingClientRect();
+  const frameBounds = () => frames.map((frame, index) => {
+    const rect = frameContents[index].getBoundingClientRect();
     return { top: rect.top + scrollY, height: rect.height, nativeScroll: frame.dataset.frameScroll === 'native', stopAfter: frame.hasAttribute('data-frame-stop') };
   });
   const updateTouchAction = () => {
@@ -64,8 +67,8 @@ if (frames.length > 1 && main) {
   };
   const boundNativeScroll = () => {
     if (!nativeBoundary || destination || zoomed()) return;
-    const bottom = nativeBoundary.getBoundingClientRect().bottom;
-    if (!boundaryEnabled && scrollY > Math.max(nativeBoundary.getBoundingClientRect().top + scrollY, bottom + scrollY - viewportHeight) + 2) return;
+    const { top, bottom } = frameContents[boundaryIndex].getBoundingClientRect();
+    if (!boundaryEnabled && Math.max(top, bottom - viewportHeight) < -2) return;
     // Clip overflow without creating a nested scroller: native touch inertia stops here.
     main.style.setProperty('--native-scroll-end', `${bottom - main.getBoundingClientRect().top}px`);
     main.classList.add('native-scroll-bounded');
@@ -90,7 +93,7 @@ if (frames.length > 1 && main) {
   const horizontalScroller = (target: EventTarget | null) => target instanceof Element
     ? target.closest('.destination-deck')?.querySelector<HTMLElement>('.destination-cards') : null;
   const targetPosition = (stop: FrameStop) => {
-    const bounds = frames[stop.index].getBoundingClientRect();
+    const bounds = frameContents[stop.index].getBoundingClientRect();
     const end = Math.max(0, bounds.height - viewportHeight);
     const offset = stop.offset === 'end' ? end : Math.min(stop.offset, end);
     return Math.max(0, Math.min(bounds.top + scrollY + offset, root.scrollHeight - innerHeight));
@@ -219,8 +222,8 @@ if (frames.length > 1 && main) {
     let sourceIndex = 0;
     bounds.forEach((frame, index) => { if (frame.top <= origin + 2) sourceIndex = index; });
     const source = frames[sourceIndex];
-    const sourceBounds = bounds[sourceIndex];
-    const coversViewport = sourceBounds.top <= origin + 2 && sourceBounds.top + sourceBounds.height >= origin + innerHeight - 2;
+    const sourceBounds = source.getBoundingClientRect();
+    const coversViewport = sourceBounds.top <= 2 && sourceBounds.bottom >= innerHeight - 2;
     // A partial outgoing frame cannot cover the viewport during a crossfade.
     if (coversViewport && source !== frames[stop.index] && !source.matches('.hero-section') && !frames[stop.index].matches('.hero-section') && !reducedMotion.matches) {
       void blurTo(source, stop);
