@@ -5,6 +5,8 @@ interface AgencyConfig {
   mission: string;
   history: string;
   contact: {
+    email: string | null;
+    phones: readonly string[];
     whatsapp: string | null;
     instagram: string | null;
   };
@@ -13,9 +15,9 @@ interface AgencyConfig {
 // Only add approved commercial details and confirmed, complete contact URLs.
 export const agency: AgencyConfig = {
   name: 'AGENCIA',
-  description: 'Agencia virtual enfocada en viajes al exterior y recorridos multidestino.',
-  team: [],
-  mission: 'Empezamos por escuchar qué imaginás para el viaje. A partir de esa conversación, exploramos destinos y combinaciones para darle forma a una propuesta que podamos revisar juntos.',
-  history: '[Presentación del equipo, experiencia y origen del proyecto. Contenido pendiente de la agencia.]',
-  contact: { whatsapp: null, instagram: null },
+  description: 'Viajes por Argentina y el exterior, cruceros y salidas grupales. Te acompañamos desde la primera consulta hasta que volvés a casa.',
+  team: ['Sonia', 'Federico'],
+  mission: 'Planificamos tu viaje con vos y te acompañamos desde la primera consulta hasta que volvés a casa.',
+  history: 'Somos licenciados en Turismo con más de 15 años de experiencia en el sector.',
+  contact: { email: null, phones: [], whatsapp: null, instagram: null },
 };

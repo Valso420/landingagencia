@@ -148,5 +148,13 @@ test('built pages enforce the static-site privacy policy', async context => {
       const destinationTags = tagsFrom(destinationHtml);
       assert.ok(destinationTags.some(tag => tag.name === 'a' && tag.attributes.get('href') === `/contacto/?destino=${slug}`), `${slug} must retain its destination when starting an inquiry.`);
     }
+    const expectedCategories = ['argentina', 'brasil', 'eeuu', 'caribe', 'resto-america', 'europa', 'exoticos'];
+    for (const page of ['index.html', 'destinos/index.html']) {
+      const explorer = tagsFrom(await readFile(join(outputDirectory, page), 'utf8'));
+      assert.deepEqual(explorer.filter(tag => tag.attributes.has('data-region')).map(tag => tag.attributes.get('data-region')), expectedCategories);
+      for (const slug of expectedCategories) {
+        assert.ok(explorer.some(tag => tag.name === 'a' && tag.attributes.get('href') === `/contacto/?categoria=${slug}`), `${page} must offer an inquiry for ${slug}.`);
+      }
+    }
   });
 });

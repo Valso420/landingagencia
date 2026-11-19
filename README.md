@@ -38,17 +38,18 @@ The LAN commands listen on `0.0.0.0`. Connect both devices to the same trusted n
 | --- | --- |
 | `/` | Window hero, agency section and destination explorer |
 | `/#agencia` | Agency introduction |
-| `/agencia/` | Agency presentation and pending team information |
-| `/destinos/` | Three regions with destination cards that change in place |
-| `/?region=asia#destinos` | Asia: Japan, Thailand, Vietnam and Indonesia |
+| `/agencia/` | Agency founders, experience and traveler support |
+| `/destinos/` | Seven categories with illustrated destinations or a category inquiry |
+| `/?region=exoticos#destinos` | Exóticos: Japan, Thailand, Vietnam and Indonesia |
 | `/?region=europa#destinos` | Europe, Portugal and Italy |
-| `/?region=america#destinos` | America, Peru and Mexico |
+| `/?region=resto-america#destinos` | Resto de América: Peru and Mexico |
 | `/destinos/japon/` | Reusable destination template: Japan |
 | `/destinos/portugal/` | Reusable destination template: Portugal |
 | `/destinos/italia/` | Reusable destination template: Italy |
+| `/contacto/?categoria=argentina` | Category inquiry with a return link to Argentina |
 | `/contacto/?destino=japon` | Contact with Japan retained as the inquiry destination |
 
-The other valid contact destination values are `tailandia`, `vietnam`, `indonesia`, `portugal`, `italia`, `peru` and `mexico`. Each destination has a static page under `/destinos/<slug>/`, links back to its region and retains its selection in contact. Itineraries are illustrative, not bookable packages. The contact page displays a pending Instagram channel and collects no personal data. Only known destination slugs are shown, using text content. Unknown queries are ignored. Without JavaScript, navigation and destination content remain available; query-based contact context requires JavaScript.
+The other valid contact destination values are `tailandia`, `vietnam`, `indonesia`, `portugal`, `italia`, `peru` and `mexico`. Each destination has a static page under `/destinos/<slug>/`, links back to its region and retains its selection in contact. Itineraries are illustrative, not bookable packages. The contact page shows confirmed contact details when available and collects no personal data. Only known destinations and categories are displayed, using text content. Unknown queries are ignored. Without JavaScript, navigation and destination content remain available; query-based contact context requires JavaScript.
 
 ### Responsive layout
 
@@ -72,7 +73,7 @@ The window is a flattened provisional image. Only the window interior changes li
 
 ## Edit content
 
-- `src/config/agency.ts`: agency name, description, team, mission, history and confirmed contact URLs.
+- `src/config/agency.ts`: agency name, description, presentation copy and confirmed contact details.
 - `src/data/destinations.ts`: typed regions, destination copy, images and itinerary stops.
 - `src/pages/destinos/[slug].astro`: shared destination template and generated static routes.
 - `src/assets/`: source images optimized by Astro during the build.

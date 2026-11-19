@@ -9,18 +9,18 @@ const { standalone = false } = Astro.props;
 ---
 
 <section id="destinos" class:list={['destination-explorer', { 'destination-explorer--standalone': standalone }]} aria-label="Explorá nuestros destinos" data-destination-explorer>
-  <p class="sr-only" id="destination-carousel-help">Deslizá horizontalmente o elegí un país debajo de la tarjeta para cambiar de destino. También podés usar las flechas izquierda y derecha con el foco en las tarjetas o en el selector.</p>
+  <p class="sr-only" id="destination-carousel-help">Deslizá horizontalmente o elegí un destino debajo de la tarjeta para cambiar de propuesta. También podés usar las flechas izquierda y derecha con el foco en las tarjetas o en el selector.</p>
   {regions.map((region, index) => {
     const Heading = standalone && index === 0 ? 'h1' : 'h2';
     const items = region.destinationSlugs.map(slug => destinations.find(destination => destination.slug === slug)!);
     return (
-      <article id={`region-${region.slug}`} class={`screen-frame region-panel region-panel--${region.slug}`} data-region={region.slug} data-frame-stop={!standalone && index === 0 ? '' : undefined} aria-labelledby={`region-title-${region.slug}`}>
+      <article id={`region-${region.slug}`} class:list={['screen-frame', 'region-panel', `region-panel--${region.slug}`, { 'region-panel--consult': items.length === 0 }]} data-region={region.slug} data-frame-stop={!standalone && index === 0 ? '' : undefined} aria-labelledby={`region-title-${region.slug}`}>
         {items.map((destination, destinationIndex) => (
           <Image src={destination.image} alt="" class="region-background" data-destination-background={destination.slug} data-menu-background={destinationIndex === 0 ? '' : undefined} hidden={destinationIndex !== 0} quality={90} loading={standalone && index === 0 && destinationIndex === 0 ? 'eager' : 'lazy'} />
         ))}
         <div class="region-content" data-frame-content>
-          <Heading id={`region-title-${region.slug}`} class="region-title" tabindex="-1">{region.name}</Heading>
-          <div class="destination-deck" data-destination-deck>
+          <Heading id={`region-title-${region.slug}`} class:list={['region-title', { 'region-title--long': region.name.length > 8 }]} tabindex="-1">{region.name}</Heading>
+          {items.length > 0 ? <div class="destination-deck" data-destination-deck>
             <ul id={`destination-cards-${region.slug}`} class="destination-cards" aria-label={`Recorridos ilustrativos de ${region.name}`} aria-describedby="destination-carousel-help" tabindex="0">
               {items.map(destination => (
                 <li class="destination-card-item" data-destination-name={destination.name}>
@@ -41,8 +41,11 @@ const { standalone = false } = Astro.props;
               ))}
               <p class="destination-position sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
             </div>
+          </div> : <a class="button region-consult" href={`/contacto/?categoria=${region.slug}`}>Consultar por {region.name}</a>}
+          <div class="region-summary">
+            <p class="region-description">{region.description}</p>
+            {items.length > 0 && <a class="region-category-link" href={`/contacto/?categoria=${region.slug}`}>Consultar por {region.name}</a>}
           </div>
-          <p class="region-description">{region.description}</p>
         </div>
       </article>
     );
@@ -58,7 +61,8 @@ const { standalone = false } = Astro.props;
     const restoreRegion = () => {
       const regionHash = location.hash.startsWith('#region-');
       if (location.hash && location.hash !== '#destinos' && !regionHash) return;
-      const slug = regionHash ? location.hash.slice(8) : new URLSearchParams(location.search).get('region');
+      const requestedSlug = regionHash ? location.hash.slice(8) : new URLSearchParams(location.search).get('region');
+      const slug = requestedSlug === 'asia' ? 'exoticos' : requestedSlug === 'america' ? 'resto-america' : requestedSlug;
       if (!slug) return;
       const panel = [...explorer.querySelectorAll<HTMLElement>('[data-region]')].find(item => item.dataset.region === slug);
       if (!panel) return;

@@ -2,19 +2,23 @@
 import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import cinqueTerre from '../assets/cinque-terre.png';
-import { destinations } from '../data/destinations';
+import { destinations, regions } from '../data/destinations';
 import { agency } from '../config/agency';
 import '../styles/contact.css';
 const catalogue = destinations.map(({ slug, name }) => ({ slug, name }));
+const categories = regions.map(({ slug, name }) => ({ slug, name }));
 ---
 <BaseLayout title={`Consultas de viaje · ${agency.name}`} overlayHeader>
   <div class="contact-page screen-frame" data-header-theme="light">
     <Image class="contact-editorial" data-menu-background src={cinqueTerre} alt="Cinque Terre sobre la costa de Italia" widths={[400, 800, 1200]} sizes="(min-width: 760px) 45vw, 100vw" format="webp" loading="eager" />
-    <section class="contact-content" aria-labelledby="contact-title" data-destinations={JSON.stringify(catalogue)}>
+    <section class="contact-content" aria-labelledby="contact-title" data-destinations={JSON.stringify(catalogue)} data-categories={JSON.stringify(categories)}>
       <h1 id="contact-title">Consultas<br />de viaje</h1>
-      <p class="contact-lead">Destinos y recorridos multidestino.</p>
-      <p class="contact-channel">Instagram de la agencia</p>
-      {agency.contact.instagram ? <a class="button" href={agency.contact.instagram} target="_blank" rel="noopener noreferrer">Ir a Instagram <span aria-hidden="true">↗</span></a> : <p class="contact-pending" id="contact-status">[Enlace pendiente de confirmar]</p>}
+      <p class="contact-lead">Contanos qué viaje tenés en mente.</p>
+      {agency.contact.email && <a class="button" href={`mailto:${agency.contact.email}`}>{agency.contact.email}</a>}
+      {agency.contact.phones.map(phone => <a class="button" href={`tel:${phone}`}>{phone}</a>)}
+      {agency.contact.whatsapp && <a class="button" href={agency.contact.whatsapp} target="_blank" rel="noopener noreferrer">Consultar por WhatsApp <span aria-hidden="true">↗</span></a>}
+      {agency.contact.instagram && <a class="button" href={agency.contact.instagram} target="_blank" rel="noopener noreferrer">Ir a Instagram <span aria-hidden="true">↗</span></a>}
+      {!agency.contact.email && agency.contact.phones.length === 0 && <p class="contact-pending" id="contact-status">El correo y los teléfonos de la agencia están pendientes de confirmación.</p>}
       <p class="contact-destination" id="selected-destination" hidden></p>
       <div class="contact-back-links">
         <a id="back-destination" href="/destinos/">← Volver a destinos</a>
@@ -29,13 +33,20 @@ const catalogue = destinations.map(({ slug, name }) => ({ slug, name }));
   const backLink = document.querySelector<HTMLAnchorElement>('#back-destination');
   if (content && selected && backLink) {
     const catalogue: { slug: string; name: string }[] = JSON.parse(content.dataset.destinations ?? '[]');
-    const slug = new URLSearchParams(window.location.search).get('destino');
-    const destination = catalogue.find(item => item.slug === slug);
+    const categories: { slug: string; name: string }[] = JSON.parse(content.dataset.categories ?? '[]');
+    const parameters = new URLSearchParams(window.location.search);
+    const destination = catalogue.find(item => item.slug === parameters.get('destino'));
+    const category = categories.find(item => item.slug === parameters.get('categoria'));
     if (destination) {
       selected.textContent = `Destino de tu consulta: ${destination.name}`;
       selected.hidden = false;
       backLink.href = `/destinos/${encodeURIComponent(destination.slug)}/`;
       backLink.textContent = `← Volver a ${destination.name}`;
+    } else if (category) {
+      selected.textContent = `Categoría de tu consulta: ${category.name}`;
+      selected.hidden = false;
+      backLink.href = `/destinos/#region-${encodeURIComponent(category.slug)}`;
+      backLink.textContent = `← Volver a ${category.name}`;
     }
   }
 </script>

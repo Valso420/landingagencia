@@ -2,13 +2,13 @@
 import { Image } from 'astro:assets';
 import windowImage from '../assets/airplane-window.png';
 import { agency } from '../config/agency';
-interface Props { overlay?: boolean }
-const { overlay = false } = Astro.props;
+interface Props { overlay?: boolean; contactUrl?: string }
+const { overlay = false, contactUrl = '/contacto/' } = Astro.props;
 const links = [
   { title: 'Inicio', href: '/#inicio' },
   { title: 'La agencia', href: '/agencia/' },
   { title: 'Destinos', href: '/destinos/' },
-  { title: 'Contacto', href: '/contacto/' },
+  { title: 'Contacto', href: contactUrl },
 ];
 ---
 <header class:list={['site-header', { 'site-header--overlay': overlay }]}>
@@ -34,7 +34,7 @@ const links = [
       <ol>
         {links.map(link => <li><a href={link.href}>{link.title}</a></li>)}
       </ol>
-      <a class="button menu-social" href={agency.contact.instagram ?? '/contacto/'} target={agency.contact.instagram ? '_blank' : undefined} rel={agency.contact.instagram ? 'noopener noreferrer' : undefined}><span class="menu-social-label">Instagram</span></a>
+      <a class="button menu-social" href={contactUrl}><span class="menu-social-label">Consultar</span></a>
     </div>
   </nav>
 </header>

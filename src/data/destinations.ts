@@ -8,7 +8,7 @@ import indonesia from '../assets/indonesia.jpg';
 import peru from '../assets/peru.jpg';
 import mexico from '../assets/mexico.jpg';
 
-export type RegionSlug = 'asia' | 'europa' | 'america';
+export type RegionSlug = 'argentina' | 'brasil' | 'eeuu' | 'caribe' | 'resto-america' | 'europa' | 'exoticos';
 
 export interface DestinationStop {
   city: string;
@@ -42,7 +42,7 @@ export const destinations: readonly Destination[] = [
   {
     slug: 'japon',
     name: 'Japón',
-    region: 'asia',
+    region: 'exoticos',
     cardTitle: 'Japón',
     cardRoute: 'Tokio → Kioto',
     route: 'Tokio → Kioto',
@@ -66,7 +66,7 @@ export const destinations: readonly Destination[] = [
   {
     slug: 'tailandia',
     name: 'Tailandia',
-    region: 'asia',
+    region: 'exoticos',
     cardTitle: 'Tailandia',
     cardRoute: 'Bangkok → Chiang Mai',
     route: 'Bangkok → Chiang Mai',
@@ -90,7 +90,7 @@ export const destinations: readonly Destination[] = [
   {
     slug: 'vietnam',
     name: 'Vietnam',
-    region: 'asia',
+    region: 'exoticos',
     cardTitle: 'Vietnam',
     cardRoute: 'Hanói → Hoi An',
     route: 'Hanói → Ha Long → Hoi An',
@@ -119,7 +119,7 @@ export const destinations: readonly Destination[] = [
   {
     slug: 'indonesia',
     name: 'Indonesia',
-    region: 'asia',
+    region: 'exoticos',
     cardTitle: 'Indonesia',
     cardRoute: 'Ubud → Uluwatu',
     route: 'Ubud → Uluwatu',
@@ -196,7 +196,7 @@ export const destinations: readonly Destination[] = [
   {
     slug: 'peru',
     name: 'Perú',
-    region: 'america',
+    region: 'resto-america',
     cardTitle: 'Perú',
     cardRoute: 'Cusco → Machu Picchu',
     route: 'Cusco → Machu Picchu',
@@ -220,7 +220,7 @@ export const destinations: readonly Destination[] = [
   {
     slug: 'mexico',
     name: 'México',
-    region: 'america',
+    region: 'resto-america',
     cardTitle: 'México',
     cardRoute: 'C. de México → Oaxaca',
     route: 'Ciudad de México → Oaxaca',
@@ -245,10 +245,34 @@ export const destinations: readonly Destination[] = [
 
 export const regions: readonly Region[] = [
   {
-    slug: 'asia',
-    name: 'Asia',
-    description: 'De Japón al sudeste asiático: ciudades, templos, bahías y paisajes de Bali.',
-    destinationSlugs: ['japon', 'tailandia', 'vietnam', 'indonesia'],
+    slug: 'argentina',
+    name: 'Argentina',
+    description: 'Contanos qué lugares de Argentina te gustaría conocer y planifiquemos tu próximo viaje.',
+    destinationSlugs: [],
+  },
+  {
+    slug: 'brasil',
+    name: 'Brasil',
+    description: 'Conversemos sobre tus ideas para viajar por Brasil y encontrar el recorrido para vos.',
+    destinationSlugs: [],
+  },
+  {
+    slug: 'eeuu',
+    name: 'EE. UU.',
+    description: 'Elegí qué ciudades de Estados Unidos querés conocer y te ayudamos a organizar el viaje.',
+    destinationSlugs: [],
+  },
+  {
+    slug: 'caribe',
+    name: 'Caribe',
+    description: 'Contanos cómo imaginás tus días en el Caribe y exploremos las opciones juntos.',
+    destinationSlugs: [],
+  },
+  {
+    slug: 'resto-america',
+    name: 'Resto de América',
+    description: 'Perú, Colombia y otros destinos de América para descubrir a tu manera.',
+    destinationSlugs: ['peru', 'mexico'],
   },
   {
     slug: 'europa',
@@ -257,9 +281,9 @@ export const regions: readonly Region[] = [
     destinationSlugs: ['portugal', 'italia'],
   },
   {
-    slug: 'america',
-    name: 'América',
-    description: 'Recorridos de ejemplo entre ciudades, cultura y paisajes de Perú y México.',
-    destinationSlugs: ['peru', 'mexico'],
+    slug: 'exoticos',
+    name: 'Exóticos',
+    description: 'Japón y otros destinos para explorar nuevas culturas y paisajes.',
+    destinationSlugs: ['japon', 'tailandia', 'vietnam', 'indonesia'],
   },
 ];

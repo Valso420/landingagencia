@@ -19,7 +19,7 @@ const region = regions.find(item => item.slug === destination.region)!;
 const contactUrl = `/contacto/?destino=${destination.slug}`;
 ---
 
-<BaseLayout title={`${destination.name} · Recorrido ilustrativo`} description={destination.description} overlayHeader>
+<BaseLayout title={`${destination.name} · Recorrido ilustrativo`} description={destination.description} contactUrl={contactUrl} overlayHeader>
   <section class:list={['screen-frame', 'destination-cover', `destination-cover--${destination.slug}`]} aria-labelledby="destination-name" data-header-theme="light">
     <Image src={destination.image} alt={destination.imageAlt} class="destination-cover-image" data-menu-background quality={90} loading="eager" fetchpriority="high" />
     <a class="destination-back" href={returnUrl} aria-label={`Volver a destinos de ${region.name}`}><img src={backIcon.src} width="24" height="24" alt="" /></a>
