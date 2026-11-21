@@ -139,22 +139,32 @@ test('built pages enforce the static-site privacy policy', async context => {
     assert.ok(tags.some(tag => tag.attributes.get('id') === 'contact-status'), 'The unconfirmed channel must stay explicitly pending.');
     assert.ok(tags.find(tag => tag.attributes.get('id') === 'selected-destination')?.attributes.has('hidden'), 'Unknown destination queries must start without a selected destination.');
     const catalogue = JSON.parse(tags.find(tag => tag.attributes.has('data-destinations'))?.attributes.get('data-destinations') ?? '[]') as { slug: string; name: string }[];
-    assert.equal(catalogue.length, 8, 'Every editorial destination must be available to the contact flow.');
+    assert.equal(catalogue.length, 16, 'Every editorial destination must be available to the contact flow.');
     assert.equal(new Set(catalogue.map(item => item.slug)).size, catalogue.length);
+    const briefDestinations = new Set(['patagonia', 'iguazu', 'rio-de-janeiro', 'florianopolis', 'nueva-york', 'miami', 'punta-cana', 'cancun']);
     for (const { slug, name } of catalogue) {
-      assert.match(slug, /^[a-z]+$/);
+      assert.match(slug, /^[a-z]+(?:-[a-z]+)*$/);
       assert.ok(name.length > 0);
       const destinationHtml = await readFile(join(outputDirectory, 'destinos', slug, 'index.html'), 'utf8');
       const destinationTags = tagsFrom(destinationHtml);
       assert.ok(destinationTags.some(tag => tag.name === 'a' && tag.attributes.get('href') === `/contacto/?destino=${slug}`), `${slug} must retain its destination when starting an inquiry.`);
+      const destinationPage = destinationTags.find(tag => tag.attributes.has('data-destination-page'));
+      assert.equal(destinationPage?.attributes.get('data-destination-slug'), slug);
+      const region = destinationPage?.attributes.get('data-destination-region');
+      assert.ok(region);
+      assert.ok(destinationTags.some(tag => tag.attributes.has('data-destination-return') && tag.attributes.get('href') === `/destinos/?seleccion=${slug}#region-${region}`), `${slug} must return to its selected card with a native fallback.`);
+      assert.equal(destinationTags.some(tag => tag.attributes.get('id') === 'recorrido'), !briefDestinations.has(slug), 'Only itinerary examples must present a list of trip stops.');
+      if (briefDestinations.has(slug)) assert.ok(destinationHtml.includes('Destino de ejemplo · contenido provisional'));
     }
     const expectedCategories = ['argentina', 'brasil', 'eeuu', 'caribe', 'resto-america', 'europa', 'exoticos'];
     for (const page of ['index.html', 'destinos/index.html']) {
       const explorer = tagsFrom(await readFile(join(outputDirectory, page), 'utf8'));
+      const origin = page === 'index.html' ? 'inicio' : 'destinos';
       assert.deepEqual(explorer.filter(tag => tag.attributes.has('data-region')).map(tag => tag.attributes.get('data-region')), expectedCategories);
       for (const slug of expectedCategories) {
-        assert.ok(explorer.some(tag => tag.name === 'a' && tag.attributes.get('href') === `/contacto/?categoria=${slug}`), `${page} must offer an inquiry for ${slug}.`);
+        assert.ok(explorer.some(tag => tag.name === 'a' && tag.attributes.get('href') === `/contacto/?categoria=${slug}&origen=${origin}`), `${page} must offer an inquiry for ${slug} and retain its origin.`);
       }
+      for (const { slug } of catalogue) assert.ok(explorer.some(tag => tag.name === 'a' && tag.attributes.get('href') === `/destinos/${slug}/?origen=${origin}`), `${page} must expose the ${slug} example and retain its origin.`);
     }
   });
 });

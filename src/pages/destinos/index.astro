@@ -1,15 +1,29 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import DestinationExplorer from '../../components/DestinationExplorer.astro';
+import ConsultationFooter from '../../components/ConsultationFooter.astro';
 import { agency } from '../../config/agency';
 ---
 
 <BaseLayout title={`Destinos · ${agency.name}`} description="Viajes por Argentina, Brasil, EE. UU., Caribe, el resto de América, Europa y destinos exóticos." overlayHeader={true}>
   <DestinationExplorer standalone />
-  <section class="screen-frame destinations-contact" aria-labelledby="destinations-contact-title">
-    <div>
-      <h2 id="destinations-contact-title">¿Qué destino te interesa?</h2>
-      <a class="destinations-contact-link" href="/contacto/">Consultar destinos</a>
+  <section class="screen-frame destinations-ending" data-header-theme="light">
+    <div class="destinations-contact" aria-labelledby="destinations-contact-title">
+      <div>
+        <h2 id="destinations-contact-title">¿Qué destino te interesa?</h2>
+        <a class="destinations-contact-link" href="/contacto/">Consultar destinos</a>
+      </div>
     </div>
+    <ConsultationFooter desktopOnly />
   </section>
 </BaseLayout>
+<style>
+  .destinations-contact { min-height: var(--screen-height); }
+  @media(min-width:1024px) {
+    .destinations-ending { min-height: 730px; }
+    .destinations-contact { min-height: 240px; padding: 48px clamp(32px, 5.556vw, 80px) 68px; }
+    .destinations-contact > div { display: flex; flex-direction: column; align-items: center; gap: 24px; max-width: 1280px; }
+    .destinations-contact h2 { max-width: none; font-size: 42px; line-height: 1.15; text-align: center; }
+    .destinations-contact-link { flex: initial; width: 240px; min-height: 52px; margin-top: 0; border-radius: 26px; }
+  }
+</style>

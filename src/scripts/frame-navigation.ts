@@ -8,7 +8,7 @@ if (frames.length > 1 && main) {
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const wheel = new WheelGesture();
   const readViewportHeight = () => {
-    const height = parseFloat(getComputedStyle(frames[0]).minHeight);
+    const height = parseFloat(getComputedStyle(main, '::before').height);
     return Number.isFinite(height) && height > 0 ? height : innerHeight;
   };
   let viewportHeight = readViewportHeight();
@@ -67,7 +67,10 @@ if (frames.length > 1 && main) {
   };
   const boundNativeScroll = () => {
     if (!nativeBoundary || destination || zoomed()) return;
-    const { top, bottom } = frameContents[boundaryIndex].getBoundingClientRect();
+    const { top, bottom, height } = frameContents[boundaryIndex].getBoundingClientRect();
+    // Compact desktop sections can share a viewport with their neighbor.
+    // Clipping at their bottom would prevent the first category from reaching the top.
+    if (height < viewportHeight - 2) { releaseBoundary(); return; }
     if (!boundaryEnabled && Math.max(top, bottom - viewportHeight) < -2) return;
     // Clip overflow without creating a nested scroller: native touch inertia stops here.
     main.style.setProperty('--native-scroll-end', `${bottom - main.getBoundingClientRect().top}px`);

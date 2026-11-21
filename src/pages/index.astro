@@ -3,73 +3,56 @@ import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import WindowHero from '../components/WindowHero.astro';
 import DestinationExplorer from '../components/DestinationExplorer.astro';
+import ConsultationFooter from '../components/ConsultationFooter.astro';
 import planning from '../assets/travel-planning.jpg';
-import arrowUp from '../assets/arrow-up.svg';
 import { agency } from '../config/agency';
 ---
 <BaseLayout title={`${agency.name} · Tu próximo viaje`} overlayHeader>
   <WindowHero />
   <section class="home-about screen-frame" id="agencia" aria-labelledby="about-title" data-header-theme="dark" data-frame-scroll="native">
     <div class="home-about-inner">
-      <Image class="home-about-image" src={planning} alt="Un mapa, una cámara y un cuaderno para planificar un viaje" widths={[400, 700, 1000]} sizes="(min-width: 1344px) 570px, (min-width: 760px) 45vw, calc(100vw - 48px)" format="webp" loading="lazy" />
+      <Image class="home-about-image" src={planning} alt="Un mapa, una cámara y un cuaderno para planificar un viaje" widths={[400, 700, 1100]} sizes="(min-width: 1440px) 544px, (min-width: 1024px) 38vw, (min-width: 760px) 45vw, calc(100vw - 48px)" format="webp" loading="lazy" />
       <div class="home-about-copy">
         <h2 id="about-title">Quiénes somos</h2>
-        <p class="home-about-lead">Somos Sonia y Federico, licenciados en Turismo con más de 15 años de experiencia en el sector.</p>
-        <p class="home-about-detail">Te ayudamos a planificar tu viaje por Argentina o el exterior y te acompañamos desde la primera consulta hasta que volvés a casa.</p>
-        <a class="button button--dark" href="/agencia/">Conocer la agencia</a>
+        <p class="home-about-lead">Somos Sonia y Federico, licenciados en Turismo, con más de 15 años de trayectoria en distintas empresas del sector.</p>
+        <p class="home-about-detail">Brindamos un servicio de calidad en la planificación, gestión y seguimiento de tu próximo viaje. Te acompañamos desde la primera consulta hasta que regresás a casa.</p>
+        <p class="home-about-closing">Un cliente satisfecho es nuestro mayor anhelo.</p>
       </div>
     </div>
   </section>
   <DestinationExplorer />
-  <footer class="home-footer screen-frame" id="contacto" data-header-theme="light">
-    <div class="home-footer-inner">
-      <h2>Consultas<br />de viaje</h2>
-      <p>Contanos qué viaje tenés en mente.</p>
-      <a class="button" href="/contacto/">Cómo consultar</a>
-      <div class="home-footer-brand">
-        <p>{agency.name}</p>
-        <a class="back-to-top" href="#inicio" aria-label="Volver al inicio" data-frame-link><img src={arrowUp.src} width="24" height="24" alt="" /></a>
-      </div>
-    </div>
-  </footer>
+  <ConsultationFooter />
 </BaseLayout>
 <style>
   /* Keep the section and its proportions steady while mobile browser controls resize. */
-  .home-about { --screen-height: 100svh; z-index: 2; display: flex; align-items: center; background: var(--paper); padding: calc(var(--header-height) + clamp(12px, calc(var(--screen-height) * .02), 24px)) 24px max(20px, env(safe-area-inset-bottom)); }
-  .home-about-inner { display: flex; flex-direction: column; gap: clamp(12px, calc(var(--screen-height) * .028), 24px); max-width: 1100px; width: 100%; margin: auto; }
-  .home-about-image { width: 100%; height: clamp(84px, calc(var(--screen-height) * .25), 228px); object-fit: cover; filter: grayscale(1); }
-  .home-about-copy { display: flex; flex-direction: column; gap: clamp(10px, calc(var(--screen-height) * .018), 16px); }
+  .home-about { --screen-height: 100svh; z-index: 2; display: flex; align-items: flex-start; background: var(--paper); padding: calc(var(--header-height) + 56px) 24px max(80px, env(safe-area-inset-bottom)); }
+  .home-about-inner { display: flex; flex-direction: column; gap: 24px; max-width: 1100px; width: 100%; margin-inline: auto; }
+  .home-about-image { width: 100%; height: 150px; object-fit: cover; filter: grayscale(1); }
+  .home-about-copy { display: flex; flex-direction: column; gap: 16px; }
   .home-about-copy h2 { font-family: 'Montserrat',sans-serif; font-size: clamp(30px, 9vw, 35px); font-weight: 500; line-height: 1.2; letter-spacing: -1.05px; }
-  .home-about-lead { font-size: clamp(16px, 4.6vw, 18px); line-height: 1.43; }
-  .home-about-detail { color: var(--muted); font-size: 15px; line-height: 1.43; }
-  .home-about-copy .button { width: 100%; }
-  .home-footer { z-index: 2; display: flex; align-items: center; padding: calc(var(--header-height) + 20px) 24px max(24px, env(safe-area-inset-bottom)); background: var(--night); color: white; }
-  .home-footer-inner { display: flex; flex-direction: column; gap: clamp(12px, 2svh, 16px); max-width: 1100px; width: 100%; margin: auto; }
-  .home-footer h2 { font-family: 'Montserrat',sans-serif; font-size: clamp(40px, 12vw, 47px); font-weight: 700; line-height: 1; letter-spacing: -1.88px; }
-  .home-footer p { font-size: 16px; line-height: 1.35; }
-  .home-footer .button { width: 100%; }
-  .home-footer-brand { border-top: 1px solid var(--muted); padding-top: 16px; display: flex; flex-direction: column; gap: 16px; }
-  .home-footer-brand p { font-weight: 500; }
-  .back-to-top { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: white; }
+  .home-about-lead { font-size: 18px; line-height: 25px; }
+  .home-about-detail { color: var(--muted); font-size: 16px; line-height: 23px; }
+  .home-about-closing { color: var(--muted); font-size: 17px; line-height: 24px; }
   @media(min-width:760px) {
     .home-about { padding: calc(var(--header-height) + 32px) var(--content-inset) 48px; }
     .home-about-inner { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: center; gap: clamp(32px, 5vw, 80px); max-width: var(--content-width); }
     .home-about-image { height: clamp(260px, calc(var(--screen-height) * .52), 580px); }
-    .home-about-copy { gap: clamp(16px, 2.5svh, 28px); }
+    .home-about-copy { gap: 24px; }
     .home-about-copy h2 { font-size: clamp(38px, 4.2vw, 60px); }
     .home-about-lead { font-size: clamp(20px, 2vw, 26px); }
-    .home-about-detail { max-width: 42ch; font-size: 17px; line-height: 1.6; }
-    .home-about-copy .button { width: fit-content; min-width: 240px; max-width: 100%; margin-top: 8px; }
-    .home-footer { padding: calc(var(--header-height) + 32px) var(--content-inset) 48px; }
-    .home-footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .7fr); gap: 24px 48px; align-items: center; max-width: var(--content-width); }
-    .home-footer h2 { grid-row: 1 / 3; font-size: clamp(56px, 7vw, 100px); }
-    .home-footer-inner > p { grid-column: 2; max-width: 30ch; font-size: 20px; line-height: 1.5; align-self: end; }
-    .home-footer .button { grid-column: 2; max-width: 342px; align-self: start; }
-    .home-footer-brand { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; margin-top: clamp(32px, 7svh, 80px); padding-top: 24px; }
+    .home-about-detail, .home-about-closing { max-width: 42ch; font-size: 17px; line-height: 1.6; }
+  }
+  @media(min-width:1024px) {
+    .home-about { min-height: 640px; align-items: center; padding: 100px clamp(32px, 5.556vw, 80px); }
+    .home-about-inner { max-width: 1280px; grid-template-columns: minmax(0, 42.5%) minmax(0, 50%); column-gap: 7.5%; }
+    .home-about-image { height: 400px; }
+    .home-about-copy h2 { font-size: 52px; line-height: 1.15; letter-spacing: 0; }
+    .home-about-lead { max-width: 600px; font-size: 23px; line-height: 1.45; }
+    .home-about-detail, .home-about-closing { max-width: 600px; font-size: 18px; line-height: 1.5; }
   }
   @media(max-height:700px) and (max-width:759px) {
-    .home-about-image { height: clamp(84px, calc(var(--screen-height) * .18), 140px); }
-    .home-about-inner { gap: 12px; }
-    .home-about-copy { gap: 10px; }
+    .home-about { padding-top: calc(var(--header-height) + 24px); padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+    .home-about-image { height: clamp(84px, calc(var(--screen-height) * .18), 150px); }
+    .home-about-inner { gap: 20px; }
   }
 </style>

@@ -1,6 +1,7 @@
 import { isViewportZoomed, WheelGesture } from '../lib/frame-navigation';
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const mobileLayout = matchMedia('(max-width: 759px)');
 
 document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck => {
   const list = deck.querySelector<HTMLElement>('.destination-cards');
@@ -11,29 +12,32 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
   const position = deck.querySelector<HTMLElement>('.destination-position');
   if (!list || !items.length || backgrounds.length !== items.length || choices.length !== items.length || !controls || !position) return;
 
-  let index = 0;
-  let requestedIndex = 0;
+  const selectedSlug = new URLSearchParams(location.search).get('seleccion');
+  let index = Math.max(0, items.findIndex(item => item.dataset.destinationSlug === selectedSlug));
+  let requestedIndex = index;
   let effects: Animation[] = [];
   let revision = 0;
   let touch: { x: number; y: number; axis: 'x' | 'y' | null; consumed: boolean } | undefined;
   let suppressClick = false;
   let suppressClickUntil = 0;
   const wheel = new WheelGesture();
-  const available = () => !deck.closest('main')?.inert
+  const available = () => mobileLayout.matches && !deck.closest('main')?.inert
     && !isViewportZoomed(window.visualViewport?.scale ?? 1);
 
   const settle = () => {
     effects.forEach(effect => effect.cancel());
     effects = [];
     items.forEach((item, candidate) => {
-      item.hidden = candidate !== index;
-      item.inert = candidate !== index;
-      if (candidate === index) item.removeAttribute('aria-hidden');
+      const visible = !mobileLayout.matches || candidate === index;
+      item.hidden = !visible;
+      item.inert = !visible;
+      if (visible) item.removeAttribute('aria-hidden');
       else item.setAttribute('aria-hidden', 'true');
     });
     backgrounds.forEach((background, candidate) => {
-      background.hidden = candidate !== index;
-      background.toggleAttribute('data-menu-background', candidate === index);
+      const visible = candidate === (mobileLayout.matches ? index : 0);
+      background.hidden = !visible;
+      background.toggleAttribute('data-menu-background', visible);
     });
   };
 
@@ -52,6 +56,7 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
   };
 
   const change = async (candidate: number) => {
+    if (!available()) return;
     const target = Math.max(0, Math.min(items.length - 1, candidate));
     if (target === requestedIndex) return;
     requestedIndex = target;
@@ -161,9 +166,39 @@ document.querySelectorAll<HTMLElement>('[data-destination-deck]').forEach(deck =
   reducedMotion.addEventListener('change', settle);
   window.addEventListener('pagehide', () => { revision++; requestedIndex = index; settle(); touch = undefined; suppressClick = false; });
 
-  settle();
-  updateControls();
-  warmImages();
-  deck.classList.add('is-enhanced');
-  controls.hidden = false;
+  const updateLayout = () => {
+    revision++;
+    const focusedIndex = items.findIndex(item => item.contains(document.activeElement));
+    if (mobileLayout.matches && focusedIndex >= 0) index = focusedIndex;
+    requestedIndex = index;
+    touch = undefined;
+    suppressClick = false;
+    deck.classList.toggle('is-enhanced', mobileLayout.matches);
+    controls.hidden = !mobileLayout.matches;
+    if (mobileLayout.matches) {
+      list.setAttribute('tabindex', '0');
+      list.setAttribute('aria-describedby', 'destination-carousel-help');
+    } else {
+      list.removeAttribute('tabindex');
+      list.removeAttribute('aria-describedby');
+    }
+    settle();
+    updateControls();
+  };
+
+  const restoreSelection = () => {
+    const slug = new URLSearchParams(location.search).get('seleccion');
+    const candidate = items.findIndex(item => item.dataset.destinationSlug === slug);
+    if (candidate < 0) return;
+    revision++;
+    index = candidate;
+    requestedIndex = candidate;
+    settle();
+    updateControls();
+  };
+
+  mobileLayout.addEventListener('change', updateLayout);
+  window.addEventListener('popstate', restoreSelection);
+  window.addEventListener('pageshow', restoreSelection);
+  updateLayout();
 });

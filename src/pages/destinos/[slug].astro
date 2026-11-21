@@ -14,30 +14,30 @@ export function getStaticPaths() {
 
 interface Props { destination: Destination }
 const { destination } = Astro.props;
-const returnUrl = `/?region=${destination.region}#destinos`;
+const returnUrl = `/destinos/?seleccion=${destination.slug}#region-${destination.region}`;
 const region = regions.find(item => item.slug === destination.region)!;
 const contactUrl = `/contacto/?destino=${destination.slug}`;
 ---
 
-<BaseLayout title={`${destination.name} · Recorrido ilustrativo`} description={destination.description} contactUrl={contactUrl} overlayHeader>
-  <section class:list={['screen-frame', 'destination-cover', `destination-cover--${destination.slug}`]} aria-labelledby="destination-name" data-header-theme="light">
-    <Image src={destination.image} alt={destination.imageAlt} class="destination-cover-image" data-menu-background quality={90} loading="eager" fetchpriority="high" />
-    <a class="destination-back" href={returnUrl} aria-label={`Volver a destinos de ${region.name}`}><img src={backIcon.src} width="24" height="24" alt="" /></a>
+<BaseLayout title={`${destination.name} · ${destination.kind === 'brief' ? 'Destino de ejemplo' : 'Recorrido ilustrativo'}`} description={destination.description} contactUrl={contactUrl} overlayHeader>
+  <section class:list={['screen-frame', 'destination-cover', `destination-cover--${destination.slug}`, { 'destination-cover--brief': destination.kind === 'brief' }]} aria-labelledby="destination-name" data-header-theme="light" data-destination-page data-destination-slug={destination.slug} data-destination-region={destination.region}>
+    <Image src={destination.image} alt={destination.imageAlt} class="destination-cover-image" data-menu-background widths={[480, 800, 1280, 1920]} sizes="100vw" format="webp" quality={85} loading="eager" fetchpriority="high" />
+    <a class:list={['destination-back', { 'destination-back--brief': destination.kind === 'brief' }]} href={returnUrl} data-destination-return aria-label={`Volver a destinos de ${region.name}`}><img src={backIcon.src} width="24" height="24" alt="" />{destination.kind === 'brief' && <span class="destination-back-label">Volver a destinos</span>}</a>
     <div class="destination-cover-content" data-frame-content>
       <div class="destination-cover-title">
         <h1 id="destination-name">{destination.name}</h1>
-        <p>{destination.route}</p>
+        <p>{destination.kind === 'brief' ? region.name : destination.route}</p>
       </div>
       <div class="destination-summary">
         <h2>{destination.headline}</h2>
         <p>{destination.description}</p>
-        <small>Recorrido ilustrativo</small>
-        <a class="destination-itinerary-link" href={contactUrl}>Consultar</a>
+        <small>{destination.kind === 'brief' ? 'Destino de ejemplo · contenido provisional' : 'Recorrido ilustrativo'}</small>
+        <a class="destination-itinerary-link" href={contactUrl} data-destination-contact>Consultar</a>
       </div>
     </div>
   </section>
 
-  <div id="recorrido" class="screen-frame destination-details" data-header-theme="dark">
+  {destination.kind === 'itinerary' && <div id="recorrido" class="screen-frame destination-details" data-header-theme="dark">
     <section class="destination-stops" aria-labelledby="stops-title">
       <div class="destination-stops-inner">
         <h2 id="stops-title">Paradas del viaje</h2>
@@ -60,9 +60,26 @@ const contactUrl = `/contacto/?destino=${destination.slug}`;
       <div>
         <h2 id="consult-title">Consultas sobre {destination.name}</h2>
         <p>Escribinos para conversar sobre destinos y posibles recorridos.</p>
-        <a class="destination-consult-link" href={contactUrl}>Consultar</a>
-        <a class="destination-region-return" href={returnUrl}>Volver a {region.name} <span aria-hidden="true">↑</span></a>
+        <a class="destination-consult-link" href={contactUrl} data-destination-contact>Consultar</a>
+        <a class="destination-region-return" href={returnUrl} data-destination-return>Volver a {region.name} <span aria-hidden="true">↑</span></a>
       </div>
     </section>
-  </div>
+  </div>}
 </BaseLayout>
+<script>
+  const page = document.querySelector<HTMLElement>('[data-destination-page]');
+  if (page) {
+    const origin = new URLSearchParams(location.search).get('origen') === 'inicio' ? 'inicio' : 'destinos';
+    const returnUrl = new URL(origin === 'inicio' ? '/' : '/destinos/', location.origin);
+    returnUrl.searchParams.set('seleccion', page.dataset.destinationSlug!);
+    returnUrl.hash = `region-${page.dataset.destinationRegion}`;
+    document.querySelectorAll<HTMLAnchorElement>('[data-destination-return]').forEach(link => {
+      link.href = `${returnUrl.pathname}${returnUrl.search}${returnUrl.hash}`;
+    });
+    document.querySelectorAll<HTMLAnchorElement>('[data-destination-contact]').forEach(link => {
+      const contactUrl = new URL(link.href);
+      contactUrl.searchParams.set('origen', origin);
+      link.href = `${contactUrl.pathname}${contactUrl.search}`;
+    });
+  }
+</script>

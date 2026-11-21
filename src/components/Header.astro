@@ -4,16 +4,23 @@ import windowImage from '../assets/airplane-window.png';
 import { agency } from '../config/agency';
 interface Props { overlay?: boolean; contactUrl?: string }
 const { overlay = false, contactUrl = '/contacto/' } = Astro.props;
+const pathname = Astro.url.pathname;
+const activePage = pathname.startsWith('/destinos/') ? 'destinos' : pathname.startsWith('/contacto/') ? 'contacto' : 'inicio';
 const links = [
-  { title: 'Inicio', href: '/#inicio' },
-  { title: 'La agencia', href: '/agencia/' },
-  { title: 'Destinos', href: '/destinos/' },
-  { title: 'Contacto', href: contactUrl },
+  { title: 'Inicio', href: '/#inicio', page: 'inicio' },
+  { title: 'Destinos', href: '/destinos/', page: 'destinos' },
+  { title: 'Contacto', href: contactUrl, page: 'contacto' },
 ];
 ---
-<header class:list={['site-header', { 'site-header--overlay': overlay }]}>
+<header class:list={['site-header', { 'site-header--overlay': overlay }]} data-theme={overlay ? 'light' : 'dark'}>
   <div class="header-inner">
     <a class="agency-name" href="/">{agency.name}</a>
+    <nav class="desktop-navigation" aria-label="Navegación principal de escritorio">
+      <ul>
+        {links.map(link => <li><a href={link.href} aria-current={activePage === link.page ? 'page' : undefined} data-header-contact={link.page === 'contacto' ? '' : undefined}>{link.title}</a></li>)}
+      </ul>
+    </nav>
+    <a class="button header-consult" href={contactUrl} data-header-contact>Consultar</a>
     <button class="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="main-menu" hidden>
       <img class="menu-open-icon" src="/menu.svg" width="24" height="24" alt="" />
       <img class="menu-close-icon" src="/close.svg" width="24" height="24" alt="" />
@@ -32,9 +39,9 @@ const links = [
     <div class="menu-inner">
       <p class="menu-brand">{agency.name}</p>
       <ol>
-        {links.map(link => <li><a href={link.href}>{link.title}</a></li>)}
+        {links.map(link => <li><a href={link.href} aria-current={activePage === link.page ? 'page' : undefined} data-header-contact={link.page === 'contacto' ? '' : undefined}>{link.title}</a></li>)}
       </ol>
-      <a class="button menu-social" href={contactUrl}><span class="menu-social-label">Consultar</span></a>
+      <a class="button menu-social" href={contactUrl} data-header-contact><span class="menu-social-label">Consultar</span></a>
     </div>
   </nav>
 </header>
@@ -43,6 +50,14 @@ const links = [
   const toggle = header?.querySelector<HTMLButtonElement>('.menu-toggle');
   const nav = header?.querySelector<HTMLElement>('.main-menu');
   if (header && toggle && nav) {
+    const origin = new URLSearchParams(location.search).get('origen') === 'inicio' ? 'inicio' : 'destinos';
+    for (const link of header.querySelectorAll<HTMLAnchorElement>('[data-header-contact]')) {
+      const url = new URL(link.href);
+      if (url.searchParams.has('destino') || url.searchParams.has('categoria')) {
+        url.searchParams.set('origen', origin);
+        link.href = url.pathname + url.search + url.hash;
+      }
+    }
     toggle.hidden = false;
     nav.hidden = true;
     header.classList.add('menu-enhanced');
@@ -92,6 +107,7 @@ const links = [
     };
     window.addEventListener('resize', () => { if (!nav.hidden) updateBackdrop(); });
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const desktop = matchMedia('(min-width: 1024px)');
     const surfaces = [nav, ...nav.querySelectorAll<HTMLElement>('.menu-brand, li, .menu-social-label')];
     let isOpen = false;
     let revision = 0;
@@ -148,6 +164,12 @@ const links = [
       }, () => { /* Reversing the menu cancels the previous animation. */ });
     };
     toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+    desktop.addEventListener('change', () => {
+      if (!desktop.matches) return;
+      const focusWasInMenu = isOpen || nav.contains(document.activeElement) || document.activeElement === toggle;
+      setOpen(false, false, false);
+      if (focusWasInMenu) header.querySelector<HTMLAnchorElement>('.desktop-navigation a[aria-current="page"]')?.focus({ preventScroll: true });
+    });
     nav.addEventListener('click', (event) => {
       // Release scroll and focus immediately for native links, including same-page anchors.
       if ((event.target as Element).closest('a')) setOpen(false, true, false);

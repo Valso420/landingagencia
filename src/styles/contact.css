@@ -3,6 +3,8 @@
 .contact-content { padding: clamp(20px, 4.7svh, 40px) 24px max(20px, env(safe-area-inset-bottom)); max-width: 680px; width: 100%; margin: auto; display: flex; flex-direction: column; gap: clamp(10px, 2.1svh, 18px); }
 .contact-content h1 { font-family: 'Montserrat',sans-serif; font-size: clamp(38px, 13.33vw, 52px); font-weight: 700; line-height: 1; letter-spacing: -2.08px; }
 .contact-lead { font-size: clamp(15px, 4.35vw, 17px); line-height: 1.35; }
+.contact-channel { font-size: 18px; font-weight: 500; line-height: 1.35; }
+.contact-channel span:last-child { display: none; }
 .contact-pending { font-size: 14px; line-height: 1.35; color: var(--gray); }
 .contact-destination { border-top: 1px solid var(--muted); padding-top: clamp(10px, 2svh, 18px); font-size: 15px; line-height: 1.4; }
 .contact-back-links { margin-top: 4px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 20px; }
@@ -14,6 +16,8 @@
   .contact-lead { font-size: 15px; }
 }
 @media(min-width:760px) {
+  .contact-channel span:first-child { display: none; }
+  .contact-channel span:last-child { display: inline; }
   .contact-page { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: stretch; position: relative; }
   .contact-editorial { position: absolute; inset: 0 auto 0 0; width: 45%; height: 100%; object-position: center; }
   .contact-content { grid-column: 2; max-width: 760px; padding: calc(var(--header-height) + 32px) clamp(32px, 4.5vw, 80px) 48px; gap: clamp(18px, 2.6svh, 28px); }

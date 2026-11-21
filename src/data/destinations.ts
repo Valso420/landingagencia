@@ -7,6 +7,14 @@ import vietnam from '../assets/vietnam.jpg';
 import indonesia from '../assets/indonesia.jpg';
 import peru from '../assets/peru.jpg';
 import mexico from '../assets/mexico.jpg';
+import patagonia from '../assets/patagonia.jpg';
+import iguazu from '../assets/iguazu.jpg';
+import rioDeJaneiro from '../assets/rio-de-janeiro.jpg';
+import florianopolis from '../assets/florianopolis.jpg';
+import nuevaYork from '../assets/nueva-york.jpg';
+import miami from '../assets/miami.jpg';
+import puntaCana from '../assets/punta-cana.jpg';
+import cancun from '../assets/cancun.jpg';
 
 export type RegionSlug = 'argentina' | 'brasil' | 'eeuu' | 'caribe' | 'resto-america' | 'europa' | 'exoticos';
 
@@ -16,10 +24,11 @@ export interface DestinationStop {
   description: string;
 }
 
-export interface Destination {
+interface DestinationContent {
   slug: string;
   name: string;
   region: RegionSlug;
+  selectorLabel?: string;
   cardTitle: string;
   cardRoute: string;
   route: string;
@@ -27,8 +36,18 @@ export interface Destination {
   description: string;
   image: ImageMetadata;
   imageAlt: string;
+}
+
+interface BriefDestination extends DestinationContent {
+  kind: 'brief';
+}
+
+interface ItineraryDestination extends DestinationContent {
+  kind: 'itinerary';
   stops: readonly DestinationStop[];
 }
+
+export type Destination = BriefDestination | ItineraryDestination;
 
 export interface Region {
   slug: RegionSlug;
@@ -37,12 +56,82 @@ export interface Region {
   destinationSlugs: readonly string[];
 }
 
+function createBriefDestination(details: Pick<DestinationContent, 'slug' | 'name' | 'region' | 'selectorLabel' | 'image' | 'imageAlt'>): BriefDestination {
+  return {
+    ...details,
+    kind: 'brief',
+    cardTitle: details.name,
+    cardRoute: 'Destino de ejemplo',
+    route: 'Destino de ejemplo',
+    headline: 'Planificá tu próximo viaje',
+    description: `Contanos qué viaje tenés en mente y definimos las opciones para conocer ${details.name}.`,
+  };
+}
+
 // Editorial examples for the internal review; these are not bookable packages.
 export const destinations: readonly Destination[] = [
+  createBriefDestination({
+    slug: 'patagonia',
+    name: 'Patagonia',
+    region: 'argentina',
+    image: patagonia,
+    imageAlt: 'Frente de un glaciar junto a un lago turquesa y montañas en la Patagonia argentina.',
+  }),
+  createBriefDestination({
+    slug: 'iguazu',
+    name: 'Iguazú',
+    region: 'argentina',
+    image: iguazu,
+    imageAlt: 'Saltos de las cataratas del Iguazú entre vegetación y nubes de agua.',
+  }),
+  createBriefDestination({
+    slug: 'rio-de-janeiro',
+    name: 'Río de Janeiro',
+    region: 'brasil',
+    selectorLabel: 'Río',
+    image: rioDeJaneiro,
+    imageAlt: 'Pan de Azúcar y embarcaciones en la bahía de Río de Janeiro.',
+  }),
+  createBriefDestination({
+    slug: 'florianopolis',
+    name: 'Florianópolis',
+    region: 'brasil',
+    image: florianopolis,
+    imageAlt: 'Playa de arena y mar azul junto a colinas cubiertas de vegetación en Florianópolis.',
+  }),
+  createBriefDestination({
+    slug: 'nueva-york',
+    name: 'Nueva York',
+    region: 'eeuu',
+    image: nuevaYork,
+    imageAlt: 'Rascacielos del sur de Manhattan vistos desde el agua, con el One World Trade Center.',
+  }),
+  createBriefDestination({
+    slug: 'miami',
+    name: 'Miami',
+    region: 'eeuu',
+    image: miami,
+    imageAlt: 'Edificios altos y paseo costero con palmeras junto a la bahía de Miami.',
+  }),
+  createBriefDestination({
+    slug: 'punta-cana',
+    name: 'Punta Cana',
+    region: 'caribe',
+    image: puntaCana,
+    imageAlt: 'Palmeras sobre una playa de arena blanca y mar turquesa en Punta Cana.',
+  }),
+  createBriefDestination({
+    slug: 'cancun',
+    name: 'Cancún',
+    region: 'caribe',
+    image: cancun,
+    imageAlt: 'Olas de agua turquesa sobre una playa de arena clara en Cancún.',
+  }),
   {
     slug: 'japon',
     name: 'Japón',
     region: 'exoticos',
+    kind: 'itinerary',
     cardTitle: 'Japón',
     cardRoute: 'Tokio → Kioto',
     route: 'Tokio → Kioto',
@@ -67,6 +156,7 @@ export const destinations: readonly Destination[] = [
     slug: 'tailandia',
     name: 'Tailandia',
     region: 'exoticos',
+    kind: 'itinerary',
     cardTitle: 'Tailandia',
     cardRoute: 'Bangkok → Chiang Mai',
     route: 'Bangkok → Chiang Mai',
@@ -91,6 +181,7 @@ export const destinations: readonly Destination[] = [
     slug: 'vietnam',
     name: 'Vietnam',
     region: 'exoticos',
+    kind: 'itinerary',
     cardTitle: 'Vietnam',
     cardRoute: 'Hanói → Hoi An',
     route: 'Hanói → Ha Long → Hoi An',
@@ -120,6 +211,7 @@ export const destinations: readonly Destination[] = [
     slug: 'indonesia',
     name: 'Indonesia',
     region: 'exoticos',
+    kind: 'itinerary',
     cardTitle: 'Indonesia',
     cardRoute: 'Ubud → Uluwatu',
     route: 'Ubud → Uluwatu',
@@ -144,6 +236,7 @@ export const destinations: readonly Destination[] = [
     slug: 'portugal',
     name: 'Portugal',
     region: 'europa',
+    kind: 'itinerary',
     cardTitle: 'Portugal',
     cardRoute: 'Lisboa → Oporto',
     route: 'Lisboa → Oporto',
@@ -168,6 +261,7 @@ export const destinations: readonly Destination[] = [
     slug: 'italia',
     name: 'Italia',
     region: 'europa',
+    kind: 'itinerary',
     cardTitle: 'Italia',
     cardRoute: 'Roma → Cinque Terre',
     route: 'Roma → Florencia → Cinque Terre',
@@ -197,6 +291,7 @@ export const destinations: readonly Destination[] = [
     slug: 'peru',
     name: 'Perú',
     region: 'resto-america',
+    kind: 'itinerary',
     cardTitle: 'Perú',
     cardRoute: 'Cusco → Machu Picchu',
     route: 'Cusco → Machu Picchu',
@@ -221,6 +316,7 @@ export const destinations: readonly Destination[] = [
     slug: 'mexico',
     name: 'México',
     region: 'resto-america',
+    kind: 'itinerary',
     cardTitle: 'México',
     cardRoute: 'C. de México → Oaxaca',
     route: 'Ciudad de México → Oaxaca',
@@ -247,26 +343,26 @@ export const regions: readonly Region[] = [
   {
     slug: 'argentina',
     name: 'Argentina',
-    description: 'Contanos qué lugares de Argentina te gustaría conocer y planifiquemos tu próximo viaje.',
-    destinationSlugs: [],
+    description: 'Patagonia e Iguazú: ideas de viaje por Argentina.',
+    destinationSlugs: ['patagonia', 'iguazu'],
   },
   {
     slug: 'brasil',
     name: 'Brasil',
-    description: 'Conversemos sobre tus ideas para viajar por Brasil y encontrar el recorrido para vos.',
-    destinationSlugs: [],
+    description: 'Río y Florianópolis: ideas para recorrer Brasil.',
+    destinationSlugs: ['rio-de-janeiro', 'florianopolis'],
   },
   {
     slug: 'eeuu',
     name: 'EE. UU.',
-    description: 'Elegí qué ciudades de Estados Unidos querés conocer y te ayudamos a organizar el viaje.',
-    destinationSlugs: [],
+    description: 'Nueva York y Miami: dos ideas de viaje por Estados Unidos.',
+    destinationSlugs: ['nueva-york', 'miami'],
   },
   {
     slug: 'caribe',
     name: 'Caribe',
-    description: 'Contanos cómo imaginás tus días en el Caribe y exploremos las opciones juntos.',
-    destinationSlugs: [],
+    description: 'Punta Cana y Cancún: ideas para disfrutar del Caribe.',
+    destinationSlugs: ['punta-cana', 'cancun'],
   },
   {
     slug: 'resto-america',

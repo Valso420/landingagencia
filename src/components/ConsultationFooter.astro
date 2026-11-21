@@ -1,0 +1,50 @@
+---
+import arrowUp from '../assets/arrow-up.svg';
+import { agency } from '../config/agency';
+
+interface Props { desktopOnly?: boolean }
+const { desktopOnly = false } = Astro.props;
+---
+<footer class:list={['consultation-footer', { 'screen-frame': !desktopOnly, 'consultation-footer--desktop-only': desktopOnly }]} id="contacto" data-header-theme="light">
+  <div class="consultation-footer-inner">
+    <div class="consultation-footer-main">
+      <h2>Consultas<br />de viaje</h2>
+      <div class="consultation-footer-consult">
+        <p class="consultation-footer-invitation">Contanos qué viaje tenés en mente.</p>
+        <a class="button" href="/contacto/">Cómo consultar</a>
+      </div>
+    </div>
+    <div class="consultation-footer-brand">
+      <p>{agency.name}</p>
+      <a class="back-to-top" href={desktopOnly ? '/#inicio' : '#inicio'} aria-label="Volver al inicio" data-frame-link={!desktopOnly ? '' : undefined}><img src={arrowUp.src} width="24" height="24" alt="" /></a>
+    </div>
+  </div>
+</footer>
+<style>
+  .consultation-footer { z-index: 2; display: flex; align-items: center; padding: calc(var(--header-height) + 20px) 24px max(24px, env(safe-area-inset-bottom)); background: var(--night); color: white; }
+  .consultation-footer--desktop-only { display: none; }
+  .consultation-footer-inner { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 1100px; margin-inline: auto; }
+  .consultation-footer-main, .consultation-footer-consult { display: flex; flex-direction: column; gap: 16px; }
+  h2 { font-family: 'Montserrat',sans-serif; font-size: clamp(40px, 12vw, 46.8px); font-weight: 700; line-height: 1; letter-spacing: -1.88px; }
+  p { font-size: 16px; line-height: 1.35; }
+  .consultation-footer-invitation { min-height: 43.2px; }
+  .button { width: 100%; }
+  .consultation-footer-brand { border-top: 1px solid var(--muted); padding-top: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .consultation-footer-brand p { font-weight: 500; }
+  .back-to-top { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: white; }
+  @media(min-width:760px) and (max-width:1023px) {
+    .consultation-footer { padding-inline: var(--content-inset); }
+    .consultation-footer-inner { max-width: var(--content-width); }
+  }
+  @media(min-width:1024px) {
+    .consultation-footer { display: block; min-height: 490px; padding: 72px clamp(32px, 5.556vw, 80px) 88px; }
+    .consultation-footer-inner { max-width: 1280px; gap: 0; }
+    .consultation-footer-main { display: grid; grid-template-columns: minmax(0, 50%) minmax(0, 37.5%); column-gap: 12.5%; min-height: 205px; align-items: center; }
+    h2 { font-size: 64px; letter-spacing: 0; }
+    .consultation-footer-consult { gap: 24px; }
+    .consultation-footer-invitation { min-height: 0; font-size: 20px; line-height: 1.4; }
+    .button { width: 240px; min-height: 52px; max-width: 100%; border-radius: 26px; }
+    .consultation-footer-brand { flex-direction: row; align-items: center; justify-content: space-between; margin-top: 40px; padding-top: 40px; }
+    .consultation-footer-brand p { font-size: 18px; }
+  }
+</style>

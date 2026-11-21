@@ -1,6 +1,6 @@
 # Travel agency landing
 
-Mobile-first Argentine virtual travel agency website. Built with Astro 7.4.5, TypeScript and native CSS. Astro generates static HTML; browser JavaScript handles the menu, destination card changes, regional return links, contact destination context and solar lighting. Horizontal gestures replace destination cards in a stationary slot.
+Mobile-first Argentine virtual travel agency website. Built with Astro 7.4.5, TypeScript and native CSS. Astro generates static HTML. Browser JavaScript handles the menu, mobile destination card changes, regional return links, contact destination context and solar lighting. Horizontal gestures replace mobile destination cards in a stationary slot, and desktop displays the cards in a grid.
 
 ## Run locally
 
@@ -21,7 +21,7 @@ npm run test:security
 npm run preview
 ```
 
-`check` runs Astro's type diagnostics. `test` runs the solar tests. `build` generates `dist/`. Run `test:security` after building to check the generated pages and their browser policies. `preview` serves that production build on loopback and does not enable development phase previews.
+`check` runs Astro's type diagnostics. `test` runs the solar and frame-navigation tests. `build` generates `dist/`. Run `test:security` after building to check the generated pages and their browser policies. `preview` serves that production build on loopback and does not enable development phase previews.
 
 For an explicit phone review on a trusted local network, use one of these commands:
 
@@ -38,8 +38,9 @@ The LAN commands listen on `0.0.0.0`. Connect both devices to the same trusted n
 | --- | --- |
 | `/` | Window hero, agency section and destination explorer |
 | `/#agencia` | Agency introduction |
-| `/agencia/` | Agency founders, experience and traveler support |
-| `/destinos/` | Seven categories with illustrated destinations or a category inquiry |
+| `/agencia/` | Compatibility redirect to `/#agencia`, including without JavaScript |
+| `/destinos/` | Seven categories containing sixteen editorial destination pages |
+| `/?region=argentina#destinos` | Argentina: Patagonia and Iguazú |
 | `/?region=exoticos#destinos` | Exóticos: Japan, Thailand, Vietnam and Indonesia |
 | `/?region=europa#destinos` | Europe, Portugal and Italy |
 | `/?region=resto-america#destinos` | Resto de América: Peru and Mexico |
@@ -48,12 +49,16 @@ The LAN commands listen on `0.0.0.0`. Connect both devices to the same trusted n
 | `/destinos/italia/` | Reusable destination template: Italy |
 | `/contacto/?categoria=argentina` | Category inquiry with a return link to Argentina |
 | `/contacto/?destino=japon` | Contact with Japan retained as the inquiry destination |
+| `/destinos/iguazu/?origen=inicio` | Iguazú with a return to its category on home |
+| `/?seleccion=iguazu#region-argentina` | Home with Iguazú restored in Argentina |
 
-The other valid contact destination values are `tailandia`, `vietnam`, `indonesia`, `portugal`, `italia`, `peru` and `mexico`. Each destination has a static page under `/destinos/<slug>/`, links back to its region and retains its selection in contact. Itineraries are illustrative, not bookable packages. The contact page shows confirmed contact details when available and collects no personal data. Only known destinations and categories are displayed, using text content. Unknown queries are ignored. Without JavaScript, navigation and destination content remain available; query-based contact context requires JavaScript.
+The sixteen valid contact destination values are `patagonia`, `iguazu`, `rio-de-janeiro`, `florianopolis`, `nueva-york`, `miami`, `punta-cana`, `cancun`, `japon`, `tailandia`, `vietnam`, `indonesia`, `portugal`, `italia`, `peru` and `mexico`. Each destination has a static page under `/destinos/<slug>/`, containing a brief summary or an illustrative itinerary. All seven categories have examples and a contextual inquiry link. The contact page shows confirmed contact details when available and collects no personal data. Only known destinations and categories are displayed, using text content. Unknown queries are ignored. Without JavaScript, navigation and destination content remain available. Query-based contact context requires JavaScript.
+
+The `origen` query parameter preserves whether a destination was opened from `inicio` or `destinos`, including the return from contact. Missing or unknown origins default to `destinos`. Regional return links include `seleccion=<slug>` and a `#region-<slug>` fragment so the originating explorer restores the chosen mobile card and category.
 
 ### Responsive layout
 
-The phone composition is preserved below 760 px. Tablet and desktop rules start at 760 px, with shared gutters and a content width capped at 1184 px. Region panels place their title and description beside a larger stationary destination card. Agency and contact content use two columns; destination covers and itinerary details split at 1024 px. Short landscape screens use compact spacing and allow taller content to remain scrollable. The window keeps its full frame and fixed wing, with its size limited by viewport height.
+The phone composition is preserved below 760 px, with one active destination card and a direct selector for each category. From 760 px, categories display every card in a two-column grid, with their title and description above it. Exóticos uses four columns from 1200 px. The home introduction and contact use two columns from 760 px. Desktop navigation and split destination covers appear from 1024 px. The home introduction uses a 1280 px maximum content width and a 640 px section at the reference desktop size. The shared desktop consultation footer is 490 px tall, and Destinos retains its preceding inquiry CTA. Short landscape screens use compact spacing and allow taller content to remain scrollable. The window keeps its full frame and fixed wing, with its size limited by viewport height.
 
 ### Window lighting
 
@@ -73,7 +78,8 @@ The window is a flattened provisional image. Only the window interior changes li
 
 ## Edit content
 
-- `src/config/agency.ts`: agency name, description, presentation copy and confirmed contact details.
+- `src/pages/index.astro`: the approved three-paragraph agency introduction immediately after the window hero.
+- `src/config/agency.ts`: agency name, description and confirmed contact details.
 - `src/data/destinations.ts`: typed regions, destination copy, images and itinerary stops.
 - `src/pages/destinos/[slug].astro`: shared destination template and generated static routes.
 - `src/assets/`: source images optimized by Astro during the build.
