@@ -4,6 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { agency } from '../src/config/agency';
 
 const outputDirectory = fileURLToPath(new URL('../dist/', import.meta.url));
 
@@ -136,7 +137,15 @@ test('built pages enforce the static-site privacy policy', async context => {
     const tags = tagsFrom(html);
     assert.ok(!tags.some(tag => ['form', 'input', 'textarea'].includes(tag.name)), 'Contact must not collect personal data or provide native submission.');
     assert.ok(!tags.some(tag => tag.attributes.get('type') === 'submit' || tag.attributes.has('formaction')), 'Submit controls must not be emitted.');
-    assert.ok(tags.some(tag => tag.attributes.get('id') === 'contact-status'), 'The unconfirmed channel must stay explicitly pending.');
+    const { email, whatsapp, phones, instagram } = agency.contact;
+    if (!email && !whatsapp && !phones.length && !instagram) {
+      assert.ok(tags.some(tag => tag.attributes.get('id') === 'contact-status'), 'The unconfirmed channel must stay explicitly pending.');
+      assert.ok(tags.some(tag => tag.name === 'button' && tag.attributes.has('disabled') && tag.attributes.get('aria-describedby') === 'contact-status'));
+    } else {
+      assert.ok(!tags.some(tag => tag.attributes.get('id') === 'contact-status'));
+      if (email) assert.ok(tags.some(tag => tag.attributes.get('href')?.startsWith(`mailto:${email}?`)));
+      if (whatsapp) assert.ok(tags.some(tag => tag.attributes.get('href') === whatsapp));
+    }
     assert.ok(tags.find(tag => tag.attributes.get('id') === 'selected-destination')?.attributes.has('hidden'), 'Unknown destination queries must start without a selected destination.');
     const catalogue = JSON.parse(tags.find(tag => tag.attributes.has('data-destinations'))?.attributes.get('data-destinations') ?? '[]') as { slug: string; name: string }[];
     assert.equal(catalogue.length, 16, 'Every editorial destination must be available to the contact flow.');

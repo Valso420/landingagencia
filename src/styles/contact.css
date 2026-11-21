@@ -6,6 +6,7 @@
 .contact-channel { font-size: 18px; font-weight: 500; line-height: 1.35; }
 .contact-channel span:last-child { display: none; }
 .contact-pending { font-size: 14px; line-height: 1.35; color: var(--gray); }
+.contact-content .button:disabled { background: #424242; border-color: #575757; color: #eee; cursor: default; }
 .contact-destination { border-top: 1px solid var(--muted); padding-top: clamp(10px, 2svh, 18px); font-size: 15px; line-height: 1.4; }
 .contact-back-links { margin-top: 4px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px 20px; }
 .contact-back-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
@@ -34,5 +35,12 @@
   .contact-destination { padding-top: 14px; }
 }
 @media(min-width:1024px) {
-  .contact-editorial { width: min(33.333%, calc((100% - var(--desktop-navigation-width)) / 2 - 32px)); }
+  .contact-page {
+    --contact-photo-width: min(33.333%, calc((100% - var(--desktop-navigation-width)) / 2 - 32px));
+    grid-template-columns: var(--contact-photo-width) minmax(0, 1fr);
+  }
+  .contact-editorial { width: var(--contact-photo-width); }
+  .contact-content { grid-area: 1 / 2; max-width: 880px; margin-inline: 0; padding-inline: clamp(32px, 3.5vw, 64px); }
+  .contact-content h1 { font-size: clamp(44px, 4.5vw, 72px); }
+  .contact-content h1 br { display: none; }
 }
