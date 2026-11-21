@@ -33,3 +33,6 @@
   .contact-lead { font-size: 18px; }
   .contact-destination { padding-top: 14px; }
 }
+@media(min-width:1024px) {
+  .contact-editorial { width: min(33.333%, calc((100% - var(--desktop-navigation-width)) / 2 - 32px)); }
+}

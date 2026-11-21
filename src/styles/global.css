@@ -297,12 +297,12 @@ main.native-scroll-bounded { max-height: calc(var(--native-scroll-end) + var(--v
 }
 
 @media (min-width: 1024px) {
-  :root { --header-height: calc(100px + env(safe-area-inset-top, 0px)); }
+  :root { --header-height: calc(100px + env(safe-area-inset-top, 0px)); --desktop-navigation-width: 390px; }
   .header-inner { display: grid; grid-template-columns: 1fr auto 1fr; padding-inline: clamp(32px, 5.556vw, 80px); }
   .agency-name { justify-self: start; }
   .site-header .menu-toggle,.site-header .main-menu { display: none!important; }
   .site-header:not(.menu-enhanced) { position: fixed; background: transparent; }
-  .desktop-navigation { display: block; width: 390px; height: 48px; border: 1px solid color-mix(in srgb, currentColor 28%, transparent); border-radius: 24px; background: color-mix(in srgb, currentColor 10%, transparent); }
+  .desktop-navigation { display: block; width: var(--desktop-navigation-width); height: 48px; border: 1px solid color-mix(in srgb, currentColor 28%, transparent); border-radius: 24px; background: color-mix(in srgb, currentColor 10%, transparent); }
   .desktop-navigation ul { display: flex; align-items: center; justify-content: space-between; height: 100%; gap: 4px; list-style: none; margin: 0; padding: 0 26px; }
   .desktop-navigation a { display: flex; align-items: center; justify-content: center; min-height: 38px; padding: 0 12px; border-radius: 20px; font-size: 15px; font-weight: 500; line-height: 1.35; transition: background-color 160ms ease-out; }
   .desktop-navigation a:hover { background: color-mix(in srgb, currentColor 14%, transparent); }
