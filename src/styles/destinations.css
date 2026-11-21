@@ -201,6 +201,7 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
 
 .destination-card:focus-visible { outline-offset: -4px; }
 .destination-card > img { width: 100%; height: 100%; object-fit: cover; }
+.destination-deck.is-enhanced .destination-card > img { position: absolute; inset: 0; }
 
 .destination-card::after {
   content: '';
@@ -215,6 +216,18 @@ html.is-frame-zoomed .destination-deck.is-enhanced { touch-action: auto; }
   right: 82px;
   bottom: 19px;
   z-index: 1;
+}
+
+/* Let the caption set the carousel's minimum height when text is enlarged. */
+.destination-deck.is-enhanced .destination-card {
+  display: flex;
+  align-items: flex-end;
+  padding: 19px 82px 19px 20px;
+}
+
+.destination-deck.is-enhanced .destination-card-copy {
+  position: relative;
+  inset: auto;
 }
 
 .destination-card-copy h3 {

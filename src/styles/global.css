@@ -182,13 +182,11 @@ main.native-scroll-bounded { max-height: calc(var(--native-scroll-end) + var(--v
 .site-header:not(.menu-enhanced) ~ main .hero-contrast { position: absolute; }
 
 /* Keep the CTA and next section stable when mobile browser controls change. */
-.hero-section { --screen-height: var(--window-scene-height); background: color-mix(in srgb, var(--night) 26%, black); z-index: 0; clip-path: inset(0); }
+.hero-section { --screen-height: var(--window-scene-height); background: var(--night); z-index: 0; overflow: clip; clip-path: inset(0); }
 [data-window-scene] { --scene-night: 0; --scene-warm: 0; --scene-dawn: 0; }
 .window-hero {
   position: relative;
-  background: var(--night);
   isolation: isolate;
-  overflow: hidden;
   width: 100%;
   height: var(--screen-height);
   margin: 0 auto;
@@ -217,7 +215,7 @@ main.native-scroll-bounded { max-height: calc(var(--native-scroll-end) + var(--v
 .hero-contrast {
   position: fixed;
   inset: 0 0 auto;
-  height: var(--screen-height);
+  height: calc(var(--screen-height) + var(--frame-backdrop-extra));
   background: linear-gradient(180deg, rgba(0,0,0,.74) 0, transparent calc(var(--window-scene-height) * .27), transparent calc(var(--window-scene-height) * .68), rgba(0,0,0,.74) var(--window-scene-height));
   pointer-events: none;
 }
